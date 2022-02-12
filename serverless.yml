@@ -1,0 +1,30 @@
+service: game-cloud-save
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-iam-roles-per-function
+  - serverless-plugin-typescript
+  - serverless-plugin-split-stacks
+  - serverless-stage-manager
+  - serverless-webpack
+
+custom:
+  stages:
+    - dev
+  webpack:
+    includeModules: true
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  profile: gameCloudSave
+  runtime: nodejs14.x
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    Stage: ${self:provider.stage}
+    Region: ${self:provider.region}
+
+functions:
+  
