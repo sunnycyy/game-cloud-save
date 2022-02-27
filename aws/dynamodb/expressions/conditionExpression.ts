@@ -1,10 +1,10 @@
 import {AttributeType} from "../attributeType";
 import {CompareOp} from "./compareOp";
-import {Expression, ExpressionAttributes, ExpressionMap} from "./expression";
+import {Expression, ExpressionAttributes, ExpressionBetweenValues, ExpressionMap} from "./expression";
 import {labelExpressionKeys, labelExpressionMap} from "./expressionUtils";
 import {LogicalJoinOp} from "./logicalJoinOp";
 
-type ConditionExpressionValue = string | number | boolean;
+type ConditionExpressionValue = string | number | boolean | ExpressionBetweenValues;
 
 export interface ConditionExpression extends Expression {}
 

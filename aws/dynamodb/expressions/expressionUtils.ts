@@ -1,7 +1,7 @@
 import {
     ExpressionArrayItemIndices,
     ExpressionArrayItemValue,
-    ExpressionAttributes,
+    ExpressionAttributes, ExpressionBetweenValues,
     ExpressionMap,
     ExpressionValue
 } from "./expression";
@@ -16,31 +16,45 @@ export function labelExpressionMap<ValueType>(
         const keyLabel = attributes.addKey(key);
         const fullPath = `${path}.${keyLabel}`;
 
-        if (Array.isArray(value)) {
-            const valueLabels = value.map(value => attributes.addValue(value));
-            labels.push([fullPath, valueLabels]);
-            continue;
-        }
-
-        if (typeof value === "object" && !(value instanceof ExpressionValue)) {
+        if (typeof value === "object" && !Array.isArray(value) && !(value instanceof ExpressionValue)) {
             labelExpressionMap(value as ExpressionMap<ValueType>, attributes, fullPath, labels);
             continue;
         }
 
-        if (value instanceof ExpressionArrayItemIndices) {
-            labels.push([fullPath, null, value.indices]);
-            continue;
-        }
-
-        const valueLabel = attributes.addValue(value as ValueType);
-        if (value instanceof ExpressionArrayItemValue) {
-            labels.push([fullPath, valueLabel, value.indices]);
-            continue;
-        }
-
-        labels.push([fullPath, valueLabel]);
+        labelExpressionValue(labels, attributes, path, value);
     }
     return labels;
+}
+
+function labelExpressionValue<ValueType>(labels: Array<string | string[] | number[]>[], attributes: ExpressionAttributes, path: string, value: ValueType) {
+    if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+            labelExpressionValue(labels, attributes, path, value[i]);
+        }
+        return;
+    }
+
+    if (value instanceof ExpressionBetweenValues) {
+        const valueLabels = [
+            attributes.addValue(value.value1),
+            attributes.addValue(value.value2),
+        ];
+        labels.push([path, valueLabels]);
+        return;
+    }
+
+    if (value instanceof ExpressionArrayItemIndices) {
+        labels.push([path, null, value.indices]);
+        return;
+    }
+
+    const valueLabel = attributes.addValue(value as ValueType);
+    if (value instanceof ExpressionArrayItemValue) {
+        labels.push([path, valueLabel, value.indices]);
+        return;
+    }
+
+    labels.push([path, valueLabel]);
 }
 
 export function labelExpressionKeys<ValueType>(
@@ -63,7 +77,19 @@ export function labelExpressionKeys<ValueType>(
             continue;
         }
 
-        labelExpressionKeys(value as ExpressionMap<ValueType>, attributes, fullPath, labels);
+        if (Array.isArray(value)) {
+            for (let i = 0; i < value.length; i++) {
+                const val = value[i];
+                if (val instanceof ExpressionArrayItemIndices) {
+                    labels.push([fullPath, val.indices]);
+                }
+            }
+            continue;
+        }
+
+        if (!(value instanceof ExpressionValue)) {
+            labelExpressionKeys(value as ExpressionMap<ValueType>, attributes, fullPath, labels);
+        }
     }
     return labels;
 }

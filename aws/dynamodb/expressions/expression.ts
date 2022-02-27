@@ -4,10 +4,11 @@ export interface Expression {
     toExpressionString(attributes: ExpressionAttributes): string;
 }
 
+//region Expression Value
 export abstract class ExpressionValue {
-    private readonly _value;
+    private readonly _value: NonNullable<any>;
 
-    protected constructor(value) {
+    protected constructor(value: NonNullable<any>) {
         this._value = value;
     }
 
@@ -46,6 +47,26 @@ export class ExpressionArrayItemIndices extends ExpressionArrayItemValue<undefin
         super(undefined, ...indices);
     }
 }
+
+type BetweenValueType = string | number;
+
+export class ExpressionBetweenValues extends ExpressionValue {
+    private readonly _value2: BetweenValueType;
+
+    constructor(value1: BetweenValueType, value2: BetweenValueType) {
+        super(value1);
+        this._value2 = value2;
+    }
+
+    get value1(): BetweenValueType {
+        return this.value;
+    }
+
+    get value2() {
+        return this._value2;
+    }
+}
+//endregion
 
 export class ExpressionAttributes {
     private readonly keyLabels = new Map<string, string>();
