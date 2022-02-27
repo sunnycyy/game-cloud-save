@@ -21,6 +21,7 @@ import {
     SetAttributeIfNotExistExpression,
     UpdateExpression
 } from "./expressions/updateExpression";
+import {ProjectionExpression} from "./expressions/projectionExpression";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client, {
@@ -43,33 +44,19 @@ export interface DynamodbItem extends Record<string, any>{
 
 type DynamoDBKey = Record<string, any>;
 
-export async function get(tableName: string, key: DynamoDBKey, projectionMap: Record<string, any> = undefined) {
+export async function get(tableName: string, key: DynamoDBKey, projections?: ProjectionExpression[]) {
     const params: GetCommandInput = {
         TableName: tableName,
         Key: key,
         ConsistentRead: true,
     };
-    if (projectionMap) {
-        params.ExpressionAttributeNames = {};
-        params.ProjectionExpression = "";
-        addProjectionExpression(params, projectionMap);
+    if (projections) {
+        const attributes = new ExpressionAttributes();
+        params.ProjectionExpression = projections.map(projection => projection.toExpressionString(attributes)).join(", ");
+        params.ExpressionAttributeNames = attributes.keys;
     }
     const response = await docClient.send(new GetCommand(params));
     return response.Item;
-}
-
-function addProjectionExpression(params: GetCommandInput, projectionMap: object, attributePath = "", keyCount = 0): number {
-    for (const [key, value] of Object.entries(projectionMap)) {
-        const attributeNameKey = `#projKey${keyCount++}`;
-        params.ExpressionAttributeNames[attributeNameKey] = key;
-        const attributeFullPath = attributePath ? `${attributePath}.${attributeNameKey}` : attributeNameKey;
-        if (typeof value === "object" && !Array.isArray(value)) {
-            keyCount = addProjectionExpression(params, value, attributeFullPath, keyCount);
-            continue;
-        }
-        params.ProjectionExpression = params.ProjectionExpression ? `${params.ProjectionExpression}, ${attributeFullPath}` : attributeFullPath;
-    }
-    return keyCount;
 }
 
 function markTimestamp(item: DynamodbItem) {
