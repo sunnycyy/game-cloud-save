@@ -2,6 +2,7 @@ import {AttributeType} from "../attributeType";
 import {CompareOp} from "./compareOp";
 import {Expression, ExpressionAttributes, ExpressionMap} from "./expression";
 import {labelExpressionKeys, labelExpressionMap} from "./expressionUtils";
+import {LogicalJoinOp} from "./logicalJoinOp";
 
 type ConditionExpressionValue = string | number | boolean;
 
@@ -19,8 +20,10 @@ abstract class ConditionExpressionImpl<ValueType extends ConditionExpressionValu
     }
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const [keyLabel, valueLabel] = labelExpressionMap(this._map, attributes);
-        return this.createExpressionString(keyLabel as string, valueLabel as string | string[]);
+        const labels = labelExpressionMap(this._map, attributes);
+        return labels
+            .map(([keyLabel, valueLabel]) => this.createExpressionString(keyLabel as string, valueLabel as string | string[]))
+            .join(` ${LogicalJoinOp.And} `);
     }
 
     protected abstract createExpressionString(keyLabel: string, valueLabel?: string | string[]): string;
@@ -62,8 +65,8 @@ abstract class AttributeExpression extends ConditionExpressionImpl<boolean> {
     }
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const keyLabel = labelExpressionKeys(this.map, attributes);
-        return this.createExpressionString(keyLabel);
+        const keyLabels = labelExpressionKeys(this.map, attributes);
+        return keyLabels.map(keyLabel => this.createExpressionString(keyLabel)).join(` ${LogicalJoinOp.And} `);
     }
 }
 

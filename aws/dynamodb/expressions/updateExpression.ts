@@ -30,8 +30,10 @@ abstract class UpdateExpressionImpl<ValueType extends UpdateExpressionValue> imp
     abstract get updateOp();
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const [keyLabel, valueLabel, index] = labelExpressionMap(this._map, attributes);
-        return this.createExpressionString(keyLabel as string, valueLabel as string | string[], index as number);
+        const labels = labelExpressionMap(this._map, attributes);
+        return labels
+            .map(([keyLabel, valueLabel, index]) => this.createExpressionString(keyLabel as string, valueLabel as string | string[], index as number))
+            .join(", ");
     }
 
     protected abstract createExpressionString(keyLabel: string, valueLabel?: string | string[], index?: number): string;
@@ -107,14 +109,8 @@ export class SetAttributeIfNotExistExpression extends SetExpression<UpdateExpres
 }
 
 export class SetExpireAtExpression extends SetAttributeExpression {
-    private readonly _expireAt: number;
-
-    get expireAt() {
-        return this._expireAt;
-    }
-
     constructor(expireAt: number) {
-        super({expireAt});
+        super({expireAt, expireAt_TTL: Math.ceil(expireAt / 1000)});
     }
 }
 //endregion
@@ -136,8 +132,8 @@ export class RemoveAttributeExpression extends RemoveExpression<boolean> {
     }
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const keyLabel = labelExpressionKeys(this.map, attributes);
-        return this.createExpressionString(keyLabel);
+        const keyLabels = labelExpressionKeys(this.map, attributes);
+        return keyLabels.map(keyLabel => this.createExpressionString(keyLabel)).join(", ");
     }
 
     protected createExpressionString(keyLabel: string): string {

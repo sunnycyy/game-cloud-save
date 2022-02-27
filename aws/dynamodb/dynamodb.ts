@@ -19,7 +19,6 @@ import {CompareOp} from "./expressions/compareOp";
 import {
     SetAttributeExpression,
     SetAttributeIfNotExistExpression,
-    SetExpireAtExpression,
     UpdateExpression
 } from "./expressions/updateExpression";
 
@@ -157,15 +156,11 @@ export async function update(tableName: string, key: DynamoDBKey, updates: Updat
         const updateOp = update.updateOp;
         expressionStrings[updateOp] = expressionStrings[updateOp] || [];
         expressionStrings[updateOp].push(expressionString);
-        if (update instanceof SetExpireAtExpression) {
-            updates.push(new SetAttributeExpression({expireAt_TTL: Math.ceil(update.expireAt / 1000)}));
-        }
     }
 
-    params.UpdateExpression = "";
-    for (const [updateOp, expressions] of Object.entries(expressionStrings)) {
-        params.UpdateExpression += `${params.UpdateExpression ? " " : ""}${updateOp} ${expressions.join(',')}`;
-    }
+    params.UpdateExpression = Object.entries(expressionStrings)
+        .map(([updateOp, expressions]) => `${updateOp} ${expressions.join(", ")}`)
+        .join(" ");
     params.ExpressionAttributeNames = attributes.keys;
     if (attributes.hasValues()) {
         params.ExpressionAttributeValues = attributes.values;

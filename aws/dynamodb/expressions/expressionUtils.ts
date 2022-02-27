@@ -9,45 +9,56 @@ import {
 export function labelExpressionMap<ValueType>(
     expressionMap: ExpressionMap<ValueType>,
     attributes: ExpressionAttributes,
-    path = ""
-): Array<string | string[] | number> {
-    const [[key, value]] = Object.entries(expressionMap);
-    const keyLabel = attributes.addKey(key);
-    const fullPath = `${path}.${keyLabel}`;
+    path = "",
+    labels: Array<string | string[] | number>[] = []
+) {
+    for (const [key, value] of Object.entries(expressionMap)) {
+        const keyLabel = attributes.addKey(key);
+        const fullPath = `${path}.${keyLabel}`;
 
-    if (Array.isArray(value)) {
-        const valueLabels = value.map(value => attributes.addValue(value));
-        return [fullPath, valueLabels];
+        if (Array.isArray(value)) {
+            const valueLabels = value.map(value => attributes.addValue(value));
+            labels.push([fullPath, valueLabels]);
+            continue;
+        }
+
+        if (typeof value === "object" && !(value instanceof ExpressionValue)) {
+            labelExpressionMap(value as ExpressionMap<ValueType>, attributes, fullPath, labels);
+            continue;
+        }
+
+        if (value instanceof ExpressionArrayIndex) {
+            labels.push([fullPath, null, value.index]);
+            continue;
+        }
+
+        const valueLabel = attributes.addValue(value as ValueType);
+        if (value instanceof ExpressionArrayItemValue) {
+            labels.push([fullPath, valueLabel, value.index]);
+            continue;
+        }
+
+        labels.push([fullPath, valueLabel]);
     }
-
-    if (typeof value === "object" && !(value instanceof ExpressionValue)) {
-        return labelExpressionMap(value as ExpressionMap<ValueType>, attributes, fullPath);
-    }
-
-    if (value instanceof ExpressionArrayIndex) {
-        return [fullPath, null, value.index];
-    }
-
-    const valueLabel = attributes.addValue(value as ValueType);
-    if (value instanceof ExpressionArrayItemValue) {
-        return [fullPath, valueLabel, value.index];
-    }
-
-    return [fullPath, valueLabel];
+    return labels;
 }
 
 export function labelExpressionKeys<ValueType>(
     expressionMap: ExpressionMap<ValueType>,
     attributes: ExpressionAttributes,
-    path = ""
-): string {
-    const [[key, value]] = Object.entries(expressionMap);
-    const keyLabel = attributes.addKey(key);
-    const fullPath = `${path}.${keyLabel}`;
+    path = "",
+    keyLabels: string[] = []
+) {
+    for (const [key, value] of Object.entries(expressionMap)) {
+        const keyLabel = attributes.addKey(key);
+        const fullPath = `${path}.${keyLabel}`;
 
-    if ((typeof value === "object") && !Array.isArray(value)) {
-        return labelExpressionKeys(value as ExpressionMap<ValueType>, attributes, fullPath);
+        if ((typeof value === "object") && !Array.isArray(value)) {
+            labelExpressionKeys(value as ExpressionMap<ValueType>, attributes, fullPath, keyLabels);
+            continue;
+        }
+
+        keyLabels.push(fullPath);
     }
-
-    return fullPath;
+    return keyLabels;
 }

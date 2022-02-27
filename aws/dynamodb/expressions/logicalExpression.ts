@@ -1,10 +1,6 @@
 import {ExpressionAttributes} from "./expression";
 import {ConditionExpression} from "./conditionExpression";
-
-enum LogicalJoinOp {
-    And = "AND",
-    Or = "OR",
-}
+import {LogicalJoinOp} from "./logicalJoinOp";
 
 abstract class LogicalJoinExpression implements ConditionExpression {
     private readonly logicalOp: LogicalJoinOp;
