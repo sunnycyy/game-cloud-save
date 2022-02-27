@@ -1,4 +1,4 @@
-import {ExpressionAttributes} from "./expressionAttributes";
+import {ExpressionAttributes} from "./expression";
 import {ConditionExpression} from "./conditionExpression";
 
 enum LogicalJoinOp {

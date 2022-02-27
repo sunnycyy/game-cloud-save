@@ -1,11 +1,13 @@
-import {ExpressionAttributes, ExpressionValue} from "./expressionAttributes";
 import {AttributeType} from "../attributeType";
 import {CompareOp} from "./compareOp";
-import {Expression, ExpressionMap} from "./expression";
+import {Expression, ExpressionAttributes, ExpressionMap} from "./expression";
+import {labelExpressionKeys, labelExpressionMap} from "./expressionUtils";
+
+type ConditionExpressionValue = string | number | boolean;
 
 export interface ConditionExpression extends Expression {}
 
-abstract class ConditionExpressionImpl<ValueType> implements ConditionExpression {
+abstract class ConditionExpressionImpl<ValueType extends ConditionExpressionValue> implements ConditionExpression {
     private readonly _map: ExpressionMap<ValueType>;
 
     protected get map() {
@@ -17,29 +19,11 @@ abstract class ConditionExpressionImpl<ValueType> implements ConditionExpression
     }
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const [keyLabel, valueLabel] = this.labelExpressionMap(this._map, attributes);
-        return this.createExpressionString(keyLabel as string, valueLabel);
+        const [keyLabel, valueLabel] = labelExpressionMap(this._map, attributes);
+        return this.createExpressionString(keyLabel as string, valueLabel as string | string[]);
     }
 
     protected abstract createExpressionString(keyLabel: string, valueLabel?: string | string[]): string;
-
-    private labelExpressionMap(expressionMap: ExpressionMap<ValueType>, attributes: ExpressionAttributes, path = ""): Array<string | string[]> {
-        const [[key, value]] = Object.entries(expressionMap);
-        const keyLabel = attributes.addKey(key);
-        const fullPath = `${path}.${keyLabel}`;
-
-        if (Array.isArray(value)) {
-            const valueLabels = value.map(value => attributes.addValue(value as unknown as ExpressionValue));
-            return [fullPath, valueLabels];
-        }
-
-        if (typeof value === "object") {
-            return this.labelExpressionMap(value as ExpressionMap<ValueType>, attributes, fullPath);
-        }
-
-        const valueLabel = attributes.addValue(value as unknown as ExpressionValue);
-        return [fullPath, valueLabel];
-    }
 }
 
 export const CompareOpFn = Object.freeze({
@@ -56,10 +40,10 @@ export const CompareOpFn = Object.freeze({
     [CompareOp.In]: (a: string, b: string | string[]) => `${a} IN (${(b as string[]).join(", ")})`,
 });
 
-export class CompareExpression extends ConditionExpressionImpl<ExpressionValue> {
+export class CompareExpression extends ConditionExpressionImpl<ConditionExpressionValue> {
     private readonly compareOp: CompareOp;
 
-    constructor(compareOp: CompareOp, map: ExpressionMap<ExpressionValue>) {
+    constructor(compareOp: CompareOp, map: ExpressionMap<ConditionExpressionValue>) {
         super(map);
         this.compareOp = compareOp;
     }
@@ -78,20 +62,8 @@ abstract class AttributeExpression extends ConditionExpressionImpl<boolean> {
     }
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const keyLabel = this.labelExpressionKeys(this.map, attributes);
+        const keyLabel = labelExpressionKeys(this.map, attributes);
         return this.createExpressionString(keyLabel);
-    }
-
-    private labelExpressionKeys(expressionMap: AttributeExpressionMap, attributes: ExpressionAttributes, path = ""): string {
-        const [[key, value]] = Object.entries(expressionMap);
-        const keyLabel = attributes.addKey(key);
-        const fullPath = `${path}.${keyLabel}`;
-        if ((typeof value === "object") && !Array.isArray(value)) {
-            return this.labelExpressionKeys(value, attributes, fullPath);
-        }
-        else {
-            return fullPath;
-        }
     }
 }
 
@@ -135,8 +107,8 @@ export class BeginsWithExpression extends ConditionExpressionImpl<string> {
     }
 }
 
-export class ContainsExpression extends ConditionExpressionImpl<ExpressionValue> {
-    constructor(map: ExpressionMap<ExpressionValue>) {
+export class ContainsExpression extends ConditionExpressionImpl<ConditionExpressionValue> {
+    constructor(map: ExpressionMap<ConditionExpressionValue>) {
         super(map);
     }
 
