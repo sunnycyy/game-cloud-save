@@ -1,5 +1,5 @@
 import {
-    ExpressionArrayIndex,
+    ExpressionArrayItemIndices,
     ExpressionArrayItemValue,
     ExpressionAttributes,
     ExpressionMap,
@@ -10,7 +10,7 @@ export function labelExpressionMap<ValueType>(
     expressionMap: ExpressionMap<ValueType>,
     attributes: ExpressionAttributes,
     path = "",
-    labels: Array<string | string[] | number>[] = []
+    labels: Array<string | string[] | number[]>[] = []
 ) {
     for (const [key, value] of Object.entries(expressionMap)) {
         const keyLabel = attributes.addKey(key);
@@ -27,14 +27,14 @@ export function labelExpressionMap<ValueType>(
             continue;
         }
 
-        if (value instanceof ExpressionArrayIndex) {
-            labels.push([fullPath, null, value.index]);
+        if (value instanceof ExpressionArrayItemIndices) {
+            labels.push([fullPath, null, value.indices]);
             continue;
         }
 
         const valueLabel = attributes.addValue(value as ValueType);
         if (value instanceof ExpressionArrayItemValue) {
-            labels.push([fullPath, valueLabel, value.index]);
+            labels.push([fullPath, valueLabel, value.indices]);
             continue;
         }
 
@@ -47,18 +47,23 @@ export function labelExpressionKeys<ValueType>(
     expressionMap: ExpressionMap<ValueType>,
     attributes: ExpressionAttributes,
     path = "",
-    keyLabels: string[] = []
+    labels: Array<string | number[]>[] = []
 ) {
     for (const [key, value] of Object.entries(expressionMap)) {
         const keyLabel = attributes.addKey(key);
         const fullPath = `${path}.${keyLabel}`;
 
-        if ((typeof value === "object") && !Array.isArray(value)) {
-            labelExpressionKeys(value as ExpressionMap<ValueType>, attributes, fullPath, keyLabels);
+        if (typeof value !== "object") {
+            labels.push([fullPath]);
             continue;
         }
 
-        keyLabels.push(fullPath);
+        if (value instanceof ExpressionArrayItemIndices) {
+            labels.push([fullPath, value.indices]);
+            continue;
+        }
+
+        labelExpressionKeys(value as ExpressionMap<ValueType>, attributes, fullPath, labels);
     }
-    return keyLabels;
+    return labels;
 }

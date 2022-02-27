@@ -29,21 +29,21 @@ export class ExpressionMapValue<ValueType> extends ExpressionValue {
 }
 
 export class ExpressionArrayItemValue<ValueType> extends ExpressionValue {
-    private readonly _index: number;
+    private readonly _indices: number[];
 
-    constructor(index: number, value: ValueType) {
+    constructor(value: ValueType, ...indices: number[]) {
         super(value);
-        this._index = index;
+        this._indices = indices;
     }
 
-    get index() {
-        return this._index;
+    get indices() {
+        return this._indices;
     }
 }
 
-export class ExpressionArrayIndex extends ExpressionArrayItemValue<undefined> {
-    constructor(index: number) {
-        super(index, undefined);
+export class ExpressionArrayItemIndices extends ExpressionArrayItemValue<undefined> {
+    constructor(...indices: number[]) {
+        super(undefined, ...indices);
     }
 }
 

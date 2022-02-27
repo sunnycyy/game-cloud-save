@@ -1,6 +1,6 @@
 import {
     Expression,
-    ExpressionArrayIndex,
+    ExpressionArrayItemIndices,
     ExpressionArrayValue,
     ExpressionAttributes,
     ExpressionMap,
@@ -32,11 +32,11 @@ abstract class UpdateExpressionImpl<ValueType extends UpdateExpressionValue> imp
     toExpressionString(attributes: ExpressionAttributes): string {
         const labels = labelExpressionMap(this._map, attributes);
         return labels
-            .map(([keyLabel, valueLabel, index]) => this.createExpressionString(keyLabel as string, valueLabel as string | string[], index as number))
+            .map(([keyLabel, valueLabel, indices]) => this.createExpressionString(keyLabel as string, valueLabel as string | string[], indices as number[]))
             .join(", ");
     }
 
-    protected abstract createExpressionString(keyLabel: string, valueLabel?: string | string[], index?: number): string;
+    protected abstract createExpressionString(keyLabel: string, valueLabel?: string | string[], indices?: number[]): string;
 }
 
 //region Set
@@ -49,12 +49,12 @@ abstract class SetExpression<ValueType extends UpdateExpressionValue> extends Up
         return UpdateOp.Set;
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[], index: number): string {
-        return `${SetExpression.createExpressionKeyString(keyLabel, index)} = ${this.createExpressionValueString(keyLabel, valueLabel)}`;
+    protected createExpressionString(keyLabel: string, valueLabel: string | string[], indices: number[]): string {
+        return `${SetExpression.createExpressionKeyString(keyLabel, indices)} = ${this.createExpressionValueString(keyLabel, valueLabel)}`;
     }
 
-    private static createExpressionKeyString(keyLabel: string, index: number): string {
-        return (index !== undefined) ? `${keyLabel}[${index}]` : keyLabel;
+    private static createExpressionKeyString(keyLabel: string, indices: number[]): string {
+        return (indices !== undefined) ? `${keyLabel}${indices.map(index => `[${index}]`).join("")}` : keyLabel;
     }
 
     protected abstract createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string;
@@ -67,6 +67,12 @@ export class SetAttributeExpression extends SetExpression<UpdateExpressionValue>
 
     protected createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
         return valueLabel as string;
+    }
+}
+
+export class SetExpireAtExpression extends SetAttributeExpression {
+    constructor(expireAt: number) {
+        super({expireAt, expireAt_TTL: Math.ceil(expireAt / 1000)});
     }
 }
 
@@ -107,54 +113,31 @@ export class SetAttributeIfNotExistExpression extends SetExpression<UpdateExpres
         return `if_not_exists(${keyLabel},${valueLabel as string})`;
     }
 }
-
-export class SetExpireAtExpression extends SetAttributeExpression {
-    constructor(expireAt: number) {
-        super({expireAt, expireAt_TTL: Math.ceil(expireAt / 1000)});
-    }
-}
 //endregion
 
-//region Remove
-abstract class RemoveExpression<ValueType extends boolean | ExpressionArrayIndex> extends UpdateExpressionImpl<ValueType> {
-    protected constructor(map: ExpressionMap<ValueType>) {
+export class RemoveExpression extends UpdateExpressionImpl<boolean | ExpressionArrayItemIndices> {
+    constructor(map: ExpressionMap<boolean | ExpressionArrayItemIndices>) {
         super(map);
     }
 
     get updateOp() {
         return UpdateOp.Remove;
     }
-}
-
-export class RemoveAttributeExpression extends RemoveExpression<boolean> {
-    constructor(map: ExpressionMap<boolean>) {
-        super(map);
-    }
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const keyLabels = labelExpressionKeys(this.map, attributes);
-        return keyLabels.map(keyLabel => this.createExpressionString(keyLabel)).join(", ");
+        const labels = labelExpressionKeys(this.map, attributes);
+        return labels
+            .map(([keyLabel, indices]) => this.createExpressionString(keyLabel as string, null, indices as number[]))
+            .join(", ");
     }
 
-    protected createExpressionString(keyLabel: string): string {
-        return keyLabel;
-    }
-}
-
-export class RemoveListItemExpression extends RemoveExpression<ExpressionArrayIndex> {
-    constructor(map: ExpressionMap<ExpressionArrayIndex>) {
-        super(map);
-    }
-
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[], index: number): string {
-        return `${keyLabel}[${index}]`;
+    protected createExpressionString(keyLabel: string, valueLabel: string | string[], indices: number[]): string {
+        return (indices !== undefined) ? `${keyLabel}${indices.map(index => `[${index}]`).join("")}` : keyLabel;
     }
 }
-//endregion
 
-//region Add
-abstract class AddExpression<ValueType extends number | ExpressionArrayValue<UpdateExpressionValue>> extends UpdateExpressionImpl<ValueType> {
-    protected constructor(map: ExpressionMap<ValueType>) {
+export class AddExpression extends UpdateExpressionImpl<number | ExpressionArrayValue<UpdateExpressionValue>> {
+    constructor(map: ExpressionMap<number | ExpressionArrayValue<UpdateExpressionValue>>) {
         super(map);
     }
 
@@ -166,19 +149,6 @@ abstract class AddExpression<ValueType extends number | ExpressionArrayValue<Upd
         return `${keyLabel} ${valueLabel as string}`;
     }
 }
-
-export class AddNumberExpression extends AddExpression<number> {
-    constructor(map: ExpressionMap<number>) {
-        super(map);
-    }
-}
-
-export class AddListItemsExpression extends AddExpression<ExpressionArrayValue<UpdateExpressionValue>> {
-    constructor(map: ExpressionMap<ExpressionArrayValue<UpdateExpressionValue>>) {
-        super(map);
-    }
-}
-//endregion
 
 export class DeleteExpression extends UpdateExpressionImpl<ExpressionArrayValue<UpdateExpressionValue>> {
     constructor(map: ExpressionMap<ExpressionArrayValue<UpdateExpressionValue>>) {

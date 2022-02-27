@@ -65,8 +65,8 @@ abstract class AttributeExpression extends ConditionExpressionImpl<boolean> {
     }
 
     toExpressionString(attributes: ExpressionAttributes): string {
-        const keyLabels = labelExpressionKeys(this.map, attributes);
-        return keyLabels.map(keyLabel => this.createExpressionString(keyLabel)).join(` ${LogicalJoinOp.And} `);
+        const labels = labelExpressionKeys(this.map, attributes);
+        return labels.map(([keyLabel]) => this.createExpressionString(keyLabel as string)).join(` ${LogicalJoinOp.And} `);
     }
 }
 
