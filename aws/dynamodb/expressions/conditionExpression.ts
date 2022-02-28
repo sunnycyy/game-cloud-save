@@ -4,7 +4,7 @@ import {Expression, ExpressionAttributes, ExpressionBetweenValues, ExpressionMap
 import {labelExpressionKeys, labelExpressionMap} from "./expressionUtils";
 import {LogicalJoinOp} from "./logicalJoinOp";
 
-type ConditionExpressionValue = string | number | boolean | ExpressionBetweenValues;
+export type ConditionExpressionValue = string | number | boolean | ExpressionBetweenValues;
 
 export interface ConditionExpression extends Expression {}
 
