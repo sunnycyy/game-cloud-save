@@ -44,7 +44,7 @@ export interface DynamodbItem extends Record<string, any>{
 
 type DynamoDBKey = Record<string, any>;
 
-export async function get(tableName: string, key: DynamoDBKey, projections?: ProjectionExpression[]) {
+export async function get(tableName: string, key: DynamoDBKey, projections?: ProjectionExpression | ProjectionExpression[]) {
     const params: GetCommandInput = {
         TableName: tableName,
         Key: key,
@@ -52,7 +52,9 @@ export async function get(tableName: string, key: DynamoDBKey, projections?: Pro
     };
     if (projections) {
         const attributes = new ExpressionAttributes();
-        params.ProjectionExpression = projections.map(projection => projection.toExpressionString(attributes)).join(", ");
+        params.ProjectionExpression = Array.isArray(projections) ?
+            projections.map(projection => projection.toExpressionString(attributes)).join(", ") :
+            projections.toExpressionString(attributes);
         params.ExpressionAttributeNames = attributes.keys;
     }
     const response = await docClient.send(new GetCommand(params));
@@ -124,12 +126,16 @@ export async function del(tableName: string, key: DynamoDBKey) {
     await docClient.send(new DeleteCommand(params));
 }
 
-export async function update(tableName: string, key: DynamoDBKey, updates: UpdateExpression[]) {
+export async function update(tableName: string, key: DynamoDBKey, updates: UpdateExpression | UpdateExpression[], condition?: ConditionExpression) {
     const params: UpdateCommandInput = {
         TableName: tableName,
         Key: key,
         ReturnValues: "ALL_NEW",
     };
+
+    if (!Array.isArray(updates)) {
+        updates = [updates];
+    }
 
     const now = Date.now();
     updates.push(new SetAttributeIfNotExistExpression({createdAt: now}));
@@ -148,6 +154,11 @@ export async function update(tableName: string, key: DynamoDBKey, updates: Updat
     params.UpdateExpression = Object.entries(expressionStrings)
         .map(([updateOp, expressions]) => `${updateOp} ${expressions.join(", ")}`)
         .join(" ");
+
+    if (condition) {
+        params.ConditionExpression = condition.toExpressionString(attributes);
+    }
+
     params.ExpressionAttributeNames = attributes.keys;
     if (attributes.hasValues()) {
         params.ExpressionAttributeValues = attributes.values;
