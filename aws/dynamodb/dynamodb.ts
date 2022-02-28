@@ -126,7 +126,7 @@ export async function del(tableName: string, key: DynamoDBKey) {
     await docClient.send(new DeleteCommand(params));
 }
 
-export async function update(tableName: string, key: DynamoDBKey, updates: UpdateExpression | UpdateExpression[], condition?: ConditionExpression) {
+export async function update(tableName: string, key: DynamoDBKey, updates: UpdateExpression | UpdateExpression[]) {
     const params: UpdateCommandInput = {
         TableName: tableName,
         Key: key,
@@ -154,11 +154,6 @@ export async function update(tableName: string, key: DynamoDBKey, updates: Updat
     params.UpdateExpression = Object.entries(expressionStrings)
         .map(([updateOp, expressions]) => `${updateOp} ${expressions.join(", ")}`)
         .join(" ");
-
-    if (condition) {
-        params.ConditionExpression = condition.toExpressionString(attributes);
-    }
-
     params.ExpressionAttributeNames = attributes.keys;
     if (attributes.hasValues()) {
         params.ExpressionAttributeValues = attributes.values;
