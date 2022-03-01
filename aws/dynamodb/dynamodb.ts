@@ -17,11 +17,7 @@ import {
     UpdateCommandInput
 } from "@aws-sdk/lib-dynamodb";
 import {ExpressionAttributes} from "./expressions/expression";
-import {
-    AttributeNotExistsExpression,
-    CompareExpression,
-    ConditionExpression,
-} from "./expressions/conditionExpression";
+import {ConditionExpression} from "./expressions/conditionExpression";
 import {CompareOp} from "./expressions/compareOp";
 import {
     SetAttributeExpression,
@@ -29,7 +25,6 @@ import {
     UpdateExpression
 } from "./expressions/updateExpression";
 import {ProjectionExpression} from "./expressions/projectionExpression";
-import {FilterExpression} from "./expressions/filterExpression";
 import {KeyCompareExpression, KeyConditionExpression} from "./expressions/keyConditionExpression";
 import {AndExpression} from "./expressions/logicalExpression";
 
@@ -54,7 +49,7 @@ export interface DynamodbItem extends Record<string, any>{
 
 type DynamoDBKey = Record<string, any>;
 
-export async function get(tableName: string, key: DynamoDBKey, projections?: ProjectionExpression | ProjectionExpression[]) {
+export async function getItem(tableName: string, key: DynamoDBKey, projections?: ProjectionExpression | ProjectionExpression[]): Promise<DynamodbItem> {
     const params: GetCommandInput = {
         TableName: tableName,
         Key: key,
@@ -66,16 +61,16 @@ export async function get(tableName: string, key: DynamoDBKey, projections?: Pro
         params.ExpressionAttributeNames = attributes.keys;
     }
     const response = await docClient.send(new GetCommand(params));
-    return response.Item;
+    return response.Item as DynamodbItem;
 }
 
-function toProjectionExpressionString(projections: ProjectionExpression | ProjectionExpression[], attributes: ExpressionAttributes) {
+function toProjectionExpressionString(projections: ProjectionExpression | ProjectionExpression[], attributes: ExpressionAttributes): string {
     return Array.isArray(projections) ?
         projections.map(projection => projection.toExpressionString(attributes)).join(", ") :
         projections.toExpressionString(attributes);
 }
 
-function markTimestamp(item: DynamodbItem) {
+function markTimestamp(item: DynamodbItem): void {
     const now = Date.now();
     item.createdAt = item.createdAt || now;
     item.updatedAt = now;
@@ -84,63 +79,49 @@ function markTimestamp(item: DynamodbItem) {
     }
 }
 
-export async function put(tableName: string, item: DynamodbItem) {
+export async function putItem(tableName: string, item: DynamodbItem, condition?: ConditionExpression): Promise<void> {
     markTimestamp(item);
     const params: PutCommandInput = {
         TableName: tableName,
         Item: item,
     };
-    await _put(params);
-    return item;
-}
 
-async function _put(params: PutCommandInput) {
-    return docClient.send(new PutCommand(params));
-}
-
-export async function putIfNotExist(tableName: string, item: DynamodbItem, keyName: string) {
-    return conditionalPut(tableName, item, new AttributeNotExistsExpression({[keyName]: true}));
-}
-
-export async function putIfNotUpdated(tableName: string, item: DynamodbItem) {
-    const {updatedAt} = item;
-    return conditionalPut(tableName, item, new CompareExpression(CompareOp.Equal, {updatedAt}));
-}
-
-async function conditionalPut(tableName: string, item: DynamodbItem, condition: ConditionExpression) {
-    try {
+    if (condition) {
         const attributes = new ExpressionAttributes();
-        const expressionString = condition.toExpressionString(attributes);
-        markTimestamp(item);
-        const param: PutCommandInput = {
-            TableName: tableName,
-            Item: item,
-            ConditionExpression: expressionString,
-            ExpressionAttributeNames: attributes.keys,
-        }
+        params.ConditionExpression = condition.toExpressionString(attributes);
+        params.ExpressionAttributeNames = attributes.keys;
         if (attributes.hasValues()) {
-            param.ExpressionAttributeValues = attributes.values;
+            params.ExpressionAttributeValues = attributes.values;
         }
-        await _put(param);
-        return param.Item;
     }
-    catch (error) {
-        if (error.name === "ConditionalCheckFailedException") {
-            return null;
-        }
-        throw error;
-    }
+
+    await docClient.send(new PutCommand(params));
 }
 
-export async function del(tableName: string, key: DynamoDBKey) {
+export async function deleteItem(tableName: string, key: DynamoDBKey, condition?: ConditionExpression): Promise<void> {
     const params: DeleteCommandInput = {
         TableName: tableName,
         Key: key,
     };
+
+    if (condition) {
+        const attributes = new ExpressionAttributes();
+        params.ConditionExpression = condition.toExpressionString(attributes);
+        params.ExpressionAttributeNames = attributes.keys;
+        if (attributes.hasValues()) {
+            params.ExpressionAttributeValues = attributes.values;
+        }
+    }
+
     await docClient.send(new DeleteCommand(params));
 }
 
-export async function update(tableName: string, key: DynamoDBKey, updates: UpdateExpression | UpdateExpression[]) {
+export async function updateItem(
+    tableName: string,
+    key: DynamoDBKey,
+    updates: UpdateExpression | UpdateExpression[],
+    condition?: ConditionExpression
+): Promise<DynamodbItem> {
     const params: UpdateCommandInput = {
         TableName: tableName,
         Key: key,
@@ -168,16 +149,26 @@ export async function update(tableName: string, key: DynamoDBKey, updates: Updat
     params.UpdateExpression = Object.entries(expressionStrings)
         .map(([updateOp, expressions]) => `${updateOp} ${expressions.join(", ")}`)
         .join(" ");
+
+    if (condition) {
+        params.ConditionExpression = condition.toExpressionString(attributes);
+    }
+
     params.ExpressionAttributeNames = attributes.keys;
     if (attributes.hasValues()) {
         params.ExpressionAttributeValues = attributes.values;
     }
 
     const response = await docClient.send(new UpdateCommand(params));
-    return response.Attributes;
+    return response.Attributes as DynamodbItem;
 }
 
-export async function scan(tableName: string, filter?: FilterExpression, projections?: ProjectionExpression | ProjectionExpression[], limit?: number): Promise<DynamodbItem[]> {
+export async function scan(
+    tableName: string,
+    filter?: ConditionExpression,
+    projections?: ProjectionExpression | ProjectionExpression[],
+    limit?: number
+): Promise<DynamodbItem[]> {
     const params: ScanCommandInput = {
         TableName: tableName,
         ConsistentRead: true,
@@ -211,7 +202,7 @@ export async function query(
     tableName: string,
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
-    filter?: FilterExpression,
+    filter?: ConditionExpression,
     projections?: ProjectionExpression | ProjectionExpression[],
     limit?: number,
 ): Promise<DynamodbItem[]> {
@@ -227,7 +218,7 @@ export async function queryByDescending(
     tableName: string,
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
-    filter?: FilterExpression,
+    filter?: ConditionExpression,
     projections?: ProjectionExpression | ProjectionExpression[],
     limit?: number,
 ): Promise<DynamodbItem[]> {
@@ -245,7 +236,7 @@ export async function queryIndex(
     indexName: string,
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
-    filter?: FilterExpression,
+    filter?: ConditionExpression,
     projections?: ProjectionExpression | ProjectionExpression[],
     limit?: number,
 ): Promise<DynamodbItem[]> {
@@ -263,7 +254,7 @@ export async function queryIndexByDescending(
     indexName: string,
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
-    filter?: FilterExpression,
+    filter?: ConditionExpression,
     projections?: ProjectionExpression | ProjectionExpression[],
     limit?: number,
 ): Promise<DynamodbItem[]> {
@@ -281,7 +272,7 @@ async function _query(
     params: QueryCommandInput,
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
-    filter?: FilterExpression,
+    filter?: ConditionExpression,
     projections?: ProjectionExpression | ProjectionExpression[],
     limit?: number,
 ): Promise<DynamodbItem[]> {
