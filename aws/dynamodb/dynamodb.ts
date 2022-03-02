@@ -40,14 +40,14 @@ const docClient = DynamoDBDocumentClient.from(client, {
     },
 });
 
-export interface DynamodbItem extends Record<string, any>{
+export interface DynamodbItem extends DynamoDBKey {
     createdAt: number,
     updatedAt: number,
     expireAt?: number,
     expireAt_TTL?: number,
 }
 
-type DynamoDBKey = Record<string, any>;
+export type DynamoDBKey = Record<string, NonNullable<any>>;
 
 export async function getItem(tableName: string, key: DynamoDBKey, projection?: ProjectionExpression): Promise<DynamodbItem> {
     const params: GetCommandInput = {
