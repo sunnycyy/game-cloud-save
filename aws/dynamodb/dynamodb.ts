@@ -49,25 +49,19 @@ export interface DynamodbItem extends Record<string, any>{
 
 type DynamoDBKey = Record<string, any>;
 
-export async function getItem(tableName: string, key: DynamoDBKey, projections?: ProjectionExpression | ProjectionExpression[]): Promise<DynamodbItem> {
+export async function getItem(tableName: string, key: DynamoDBKey, projection?: ProjectionExpression): Promise<DynamodbItem> {
     const params: GetCommandInput = {
         TableName: tableName,
         Key: key,
         ConsistentRead: true,
     };
-    if (projections) {
+    if (projection) {
         const attributes = new ExpressionAttributes();
-        params.ProjectionExpression = toProjectionExpressionString(projections, attributes);
+        params.ProjectionExpression = projection.toExpressionString(attributes);
         params.ExpressionAttributeNames = attributes.keys;
     }
     const response = await docClient.send(new GetCommand(params));
     return response.Item as DynamodbItem;
-}
-
-function toProjectionExpressionString(projections: ProjectionExpression | ProjectionExpression[], attributes: ExpressionAttributes): string {
-    return Array.isArray(projections) ?
-        projections.map(projection => projection.toExpressionString(attributes)).join(", ") :
-        projections.toExpressionString(attributes);
 }
 
 function markTimestamp(item: DynamodbItem): void {
@@ -166,7 +160,7 @@ export async function updateItem(
 export async function scan(
     tableName: string,
     filter?: ConditionExpression,
-    projections?: ProjectionExpression | ProjectionExpression[],
+    projection?: ProjectionExpression,
     limit?: number
 ): Promise<DynamodbItem[]> {
     const params: ScanCommandInput = {
@@ -178,15 +172,15 @@ export async function scan(
         params.Limit = limit;
     }
 
-    if (filter || projections) {
+    if (filter || projection) {
         const attributes = new ExpressionAttributes();
 
         if (filter) {
             params.FilterExpression = filter.toExpressionString(attributes);
         }
 
-        if (projections) {
-            params.ProjectionExpression = toProjectionExpressionString(projections, attributes);
+        if (projection) {
+            params.ProjectionExpression = projection.toExpressionString(attributes);
         }
 
         params.ExpressionAttributeNames = attributes.keys;
@@ -203,7 +197,7 @@ export async function query(
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
     filter?: ConditionExpression,
-    projections?: ProjectionExpression | ProjectionExpression[],
+    projection?: ProjectionExpression,
     limit?: number,
 ): Promise<DynamodbItem[]> {
     const params: QueryCommandInput = {
@@ -211,7 +205,7 @@ export async function query(
         ConsistentRead: true,
     };
 
-    return _query(params, partitionKey, sortKeyCondition, filter, projections, limit);
+    return _query(params, partitionKey, sortKeyCondition, filter, projection, limit);
 }
 
 export async function queryByDescending(
@@ -219,7 +213,7 @@ export async function queryByDescending(
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
     filter?: ConditionExpression,
-    projections?: ProjectionExpression | ProjectionExpression[],
+    projection?: ProjectionExpression,
     limit?: number,
 ): Promise<DynamodbItem[]> {
     const params: QueryCommandInput = {
@@ -228,7 +222,7 @@ export async function queryByDescending(
         ScanIndexForward: false,
     };
 
-    return _query(params, partitionKey, sortKeyCondition, filter, projections, limit);
+    return _query(params, partitionKey, sortKeyCondition, filter, projection, limit);
 }
 
 export async function queryIndex(
@@ -237,7 +231,7 @@ export async function queryIndex(
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
     filter?: ConditionExpression,
-    projections?: ProjectionExpression | ProjectionExpression[],
+    projection?: ProjectionExpression,
     limit?: number,
 ): Promise<DynamodbItem[]> {
     const params: QueryCommandInput = {
@@ -246,7 +240,7 @@ export async function queryIndex(
         ConsistentRead: true,
     };
 
-    return _query(params, partitionKey, sortKeyCondition, filter, projections, limit);
+    return _query(params, partitionKey, sortKeyCondition, filter, projection, limit);
 }
 
 export async function queryIndexByDescending(
@@ -255,7 +249,7 @@ export async function queryIndexByDescending(
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
     filter?: ConditionExpression,
-    projections?: ProjectionExpression | ProjectionExpression[],
+    projection?: ProjectionExpression,
     limit?: number,
 ): Promise<DynamodbItem[]> {
     const params: QueryCommandInput = {
@@ -265,7 +259,7 @@ export async function queryIndexByDescending(
         ScanIndexForward: false,
     };
 
-    return _query(params, partitionKey, sortKeyCondition, filter, projections, limit);
+    return _query(params, partitionKey, sortKeyCondition, filter, projection, limit);
 }
 
 async function _query(
@@ -273,7 +267,7 @@ async function _query(
     partitionKey: DynamoDBKey,
     sortKeyCondition?: KeyConditionExpression,
     filter?: ConditionExpression,
-    projections?: ProjectionExpression | ProjectionExpression[],
+    projection?: ProjectionExpression,
     limit?: number,
 ): Promise<DynamodbItem[]> {
     if (limit && limit > 0) {
@@ -289,8 +283,8 @@ async function _query(
         params.FilterExpression = filter.toExpressionString(attributes);
     }
 
-    if (projections) {
-        params.ProjectionExpression = toProjectionExpressionString(projections, attributes);
+    if (projection) {
+        params.ProjectionExpression = projection.toExpressionString(attributes);
     }
 
     params.ExpressionAttributeNames = attributes.keys;
