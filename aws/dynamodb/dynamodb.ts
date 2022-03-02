@@ -1,5 +1,6 @@
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {
+    BatchGetCommand, BatchGetCommandInput, BatchWriteCommand, BatchWriteCommandInput,
     DeleteCommand,
     DeleteCommandInput,
     DynamoDBDocumentClient,
@@ -27,6 +28,7 @@ import {
 import {ProjectionExpression} from "./expressions/projectionExpression";
 import {KeyCompareExpression, KeyConditionExpression} from "./expressions/keyConditionExpression";
 import {AndExpression} from "./expressions/logicalExpression";
+import {BatchKeyItem, BatchPutItem} from "./batchItem";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client, {
@@ -309,4 +311,133 @@ async function processPaginatedResults(
     }
 
     return results;
+}
+
+const BatchMaxRetryCount = 3;
+
+export type BatchGetItemProjections = Record<string, ProjectionExpression>;
+const BatchGetItemLimit = 100;
+
+export async function batchGetItem(keys: BatchKeyItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
+    if (keys.length < BatchGetItemLimit) {
+        return _batchGetItem(keys, projections);
+    }
+
+    const items: DynamodbItem[] = [];
+    const batchCount = Math.ceil(keys.length / BatchGetItemLimit);
+    for (let i = 0; i < batchCount; i++) {
+        const startIndex = i * BatchGetItemLimit;
+        const endIndex = startIndex + BatchGetItemLimit;
+        const batchKeys = keys.slice(startIndex, endIndex);
+        const results = await _batchGetItem(batchKeys, projections);
+        items.push(...results);
+    }
+    return items;
+}
+
+async function _batchGetItem(keys: BatchKeyItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
+    const params: BatchGetCommandInput = {
+        RequestItems: {},
+    };
+    for (let i = 0; i < keys.length; i++) {
+        const {tableName, key} = keys[i];
+        let requestItem = params.RequestItems[tableName];
+        if (!requestItem) {
+            requestItem = {
+                Keys: [],
+                ConsistentRead: true,
+            }
+            const projection = projections[tableName];
+            if (projection) {
+                const attributes = new ExpressionAttributes();
+                requestItem.ProjectionExpression = projection.toExpressionString(attributes);
+                requestItem.ExpressionAttributeNames = attributes.keys;
+            }
+            params.RequestItems[tableName] = requestItem;
+        }
+        requestItem.Keys.push(key);
+    }
+
+    return __batchGetItem(params);
+}
+
+async function __batchGetItem(params: BatchGetCommandInput, results: DynamodbItem[] = [], retryCount = 0): Promise<DynamodbItem[]> {
+    const response = await docClient.send(new BatchGetCommand(params));
+    for (const items of Object.values(response.Responses)) {
+        results.push(...items as DynamodbItem[]);
+    }
+
+    if (!response.UnprocessedKeys) {
+        return results;
+    }
+
+    if (retryCount >= BatchMaxRetryCount) {
+        throw "BATCH_RETRY_LIMIT_EXCEED";
+    }
+
+    params.RequestItems = response.UnprocessedKeys;
+    const delay = getBatchDelayMs(retryCount);
+    const nextRetryCount = retryCount + 1;
+    return new Promise<void>((resolve) => setTimeout(() => resolve(), delay))
+        .then(_ => __batchGetItem(params, results, nextRetryCount));
+}
+
+function getBatchDelayMs(retryCount) {
+    return Math.pow(2, retryCount) * 1000;
+}
+
+const BatchWriteItemLimit = 25;
+
+export async function batchWriteItem(items: Array<BatchPutItem | BatchKeyItem>): Promise<void> {
+    if (items.length < BatchWriteItemLimit) {
+        return _batchWriteItem(items);
+    }
+
+    const batchCount = Math.ceil(items.length / BatchWriteItemLimit);
+    for (let i = 0; i < batchCount; i++) {
+        const startIndex = i * BatchWriteItemLimit;
+        const endIndex = startIndex + BatchWriteItemLimit;
+        const batchItems = items.slice(startIndex, endIndex);
+        await _batchWriteItem(batchItems);
+    }
+}
+
+async function _batchWriteItem(items: Array<BatchPutItem | BatchKeyItem>): Promise<void> {
+    const params: BatchWriteCommandInput = {
+        RequestItems: {},
+    };
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        let requestItem = params.RequestItems[item.tableName];
+        if (!requestItem) {
+            requestItem = [];
+            params.RequestItems[item.tableName] = requestItem;
+        }
+
+        if (item instanceof BatchPutItem) {
+            requestItem.push({PutRequest: {Item: item.item}});
+        }
+        else if (item instanceof BatchKeyItem) {
+            requestItem.push({DeleteRequest: {Key: item.key}});
+        }
+    }
+
+    return __batchWriteItem(params);
+}
+
+async function __batchWriteItem(params: BatchWriteCommandInput, retryCount = 0): Promise<void> {
+    const response = await docClient.send(new BatchWriteCommand(params));
+    if (!response.UnprocessedItems) {
+        return;
+    }
+
+    if (retryCount >= BatchMaxRetryCount) {
+        throw "BATCH_RETRY_LIMIT_EXCEED";
+    }
+
+    params.RequestItems = response.UnprocessedItems;
+    const delay = getBatchDelayMs(retryCount);
+    const nextRetryCount = retryCount + 1;
+    return new Promise<void>((resolve) => setTimeout(() => resolve(), delay))
+        .then(_ => __batchWriteItem(params, nextRetryCount));
 }
