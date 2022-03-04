@@ -21,7 +21,7 @@ export function labelExpressionMap<ValueType>(
             continue;
         }
 
-        labelExpressionValue(labels, attributes, path, value);
+        labelExpressionValue(labels, attributes, fullPath, value);
     }
     return labels;
 }
