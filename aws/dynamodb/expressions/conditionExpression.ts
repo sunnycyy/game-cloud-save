@@ -51,7 +51,7 @@ export class CompareExpression extends ConditionExpressionImpl<ConditionExpressi
         this.compareOp = compareOp;
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
         return CompareOpFn[this.compareOp](keyLabel, valueLabel);
     }
 }
@@ -64,7 +64,7 @@ abstract class AttributeExpression extends ConditionExpressionImpl<boolean> {
         super(map);
     }
 
-    toExpressionString(attributes: ExpressionAttributes): string {
+    override toExpressionString(attributes: ExpressionAttributes): string {
         const labels = labelExpressionKeys(this.map, attributes);
         return labels.map(([keyLabel]) => this.createExpressionString(keyLabel as string)).join(` ${LogicalJoinOp.And} `);
     }
@@ -75,7 +75,7 @@ export class AttributeExistsExpression extends AttributeExpression {
         super(map);
     }
 
-    protected createExpressionString(keyLabel: string): string {
+    protected override createExpressionString(keyLabel: string): string {
         return `attribute_exists(${keyLabel})`;
     }
 }
@@ -85,7 +85,7 @@ export class AttributeNotExistsExpression extends AttributeExpression {
         super(map);
     }
 
-    protected createExpressionString(keyLabel: string): string {
+    protected override createExpressionString(keyLabel: string): string {
         return `attribute_not_exists(${keyLabel})`;
     }
 }
@@ -95,7 +95,7 @@ export class AttributeTypeExpression extends ConditionExpressionImpl<AttributeTy
         super(map);
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
         return `attribute_type(${keyLabel},${valueLabel})`;
     }
 }
@@ -105,7 +105,7 @@ export class BeginsWithExpression extends ConditionExpressionImpl<string> {
         super(map);
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
         return `begins_with(${keyLabel}, ${valueLabel as string})`;
     }
 }
@@ -115,7 +115,7 @@ export class ContainsExpression extends ConditionExpressionImpl<ConditionExpress
         super(map);
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
         return `contains(${keyLabel}, ${valueLabel as string})`;
     }
 }
@@ -128,7 +128,7 @@ export class SizeExpression extends ConditionExpressionImpl<number> {
         this.compareOp = compareOp;
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
         return CompareOpFn[this.compareOp](`size(${keyLabel})`, valueLabel);
     }
 }

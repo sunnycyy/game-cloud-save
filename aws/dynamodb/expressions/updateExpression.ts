@@ -45,11 +45,11 @@ abstract class SetExpression<ValueType extends UpdateExpressionValue> extends Up
         super(map);
     }
 
-    get updateOp() {
+    override get updateOp() {
         return UpdateOp.Set;
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[], indices: number[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[], indices: number[]): string {
         return `${SetExpression.createExpressionKeyString(keyLabel, indices)} = ${this.createExpressionValueString(keyLabel, valueLabel)}`;
     }
 
@@ -65,7 +65,7 @@ export class SetAttributeExpression extends SetExpression<UpdateExpressionValue>
         super(map);
     }
 
-    protected createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
         return valueLabel as string;
     }
 }
@@ -89,7 +89,7 @@ export class ApplyMathOpExpression extends SetExpression<number> {
         this.mathOp = mathOp;
     }
 
-    protected createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
         return MathOpFn[this.mathOp](keyLabel, valueLabel);
     }
 }
@@ -99,7 +99,7 @@ export class AppendListItemsExpression extends SetExpression<ExpressionArrayValu
         super(map);
     }
 
-    protected createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
         return `list_append(${keyLabel},${valueLabel as string})`;
     }
 }
@@ -109,7 +109,7 @@ export class SetAttributeIfNotExistExpression extends SetExpression<UpdateExpres
         super(map);
     }
 
-    protected createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionValueString(keyLabel: string, valueLabel: string | string[]): string {
         return `if_not_exists(${keyLabel},${valueLabel as string})`;
     }
 }
@@ -120,18 +120,18 @@ export class RemoveExpression extends UpdateExpressionImpl<boolean | ExpressionA
         super(map);
     }
 
-    get updateOp() {
+    override get updateOp() {
         return UpdateOp.Remove;
     }
 
-    toExpressionString(attributes: ExpressionAttributes): string {
+    override toExpressionString(attributes: ExpressionAttributes): string {
         const labels = labelExpressionKeys(this.map, attributes);
         return labels
             .map(([keyLabel, indices]) => this.createExpressionString(keyLabel as string, null, indices as number[]))
             .join(", ");
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[], indices: number[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[], indices: number[]): string {
         return (indices !== undefined) ? `${keyLabel}${indices.map(index => `[${index}]`).join("")}` : keyLabel;
     }
 }
@@ -141,11 +141,11 @@ export class AddExpression extends UpdateExpressionImpl<number | ExpressionArray
         super(map);
     }
 
-    get updateOp() {
+    override get updateOp() {
         return UpdateOp.Add;
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
         return `${keyLabel} ${valueLabel as string}`;
     }
 }
@@ -155,11 +155,11 @@ export class DeleteExpression extends UpdateExpressionImpl<ExpressionArrayValue<
         super(map);
     }
 
-    get updateOp() {
+    override get updateOp() {
         return UpdateOp.Delete;
     }
 
-    protected createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
+    protected override createExpressionString(keyLabel: string, valueLabel: string | string[]): string {
         return `${keyLabel} ${valueLabel as string}`;
     }
 }
