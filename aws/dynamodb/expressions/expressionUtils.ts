@@ -14,7 +14,7 @@ export function labelExpressionMap<ValueType>(
 ) {
     for (const [key, value] of Object.entries(expressionMap)) {
         const keyLabel = attributes.addKey(key);
-        const fullPath = `${path}.${keyLabel}`;
+        const fullPath = path ? `${path}.${keyLabel}` : keyLabel;
 
         if (typeof value === "object" && !Array.isArray(value) && !(value instanceof ExpressionValue)) {
             labelExpressionMap(value as ExpressionMap<ValueType>, attributes, fullPath, labels);
@@ -65,7 +65,7 @@ export function labelExpressionKeys<ValueType>(
 ) {
     for (const [key, value] of Object.entries(expressionMap)) {
         const keyLabel = attributes.addKey(key);
-        const fullPath = `${path}.${keyLabel}`;
+        const fullPath = path ? `${path}.${keyLabel}` : keyLabel;
 
         if (typeof value !== "object") {
             labels.push([fullPath]);
