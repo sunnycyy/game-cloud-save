@@ -28,7 +28,7 @@ import {
 import {ProjectionExpression} from "./expressions/projectionExpression";
 import {KeyCompareExpression, KeyConditionExpression} from "./expressions/keyConditionExpression";
 import {AndExpression} from "./expressions/logicalExpression";
-import {BatchKeyItem, BatchPutItem} from "./batchItem";
+import {BatchGetItem, BatchWriteItem} from "./batchItem";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client, {
@@ -318,7 +318,7 @@ const BatchMaxRetryCount = 3;
 export type BatchGetItemProjections = Record<string, ProjectionExpression>;
 const BatchGetItemLimit = 100;
 
-export async function batchGetItem(keys: BatchKeyItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
+export async function batchGetItem(keys: BatchGetItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
     if (keys.length < BatchGetItemLimit) {
         return _batchGetItem(keys, projections);
     }
@@ -335,7 +335,7 @@ export async function batchGetItem(keys: BatchKeyItem[], projections?: BatchGetI
     return items;
 }
 
-async function _batchGetItem(keys: BatchKeyItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
+async function _batchGetItem(keys: BatchGetItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
     const params: BatchGetCommandInput = {
         RequestItems: {},
     };
@@ -388,7 +388,7 @@ function getBatchDelayMs(retryCount) {
 
 const BatchWriteItemLimit = 25;
 
-export async function batchWriteItem(items: Array<BatchPutItem | BatchKeyItem>): Promise<void> {
+export async function batchWriteItem(items: BatchWriteItem[]): Promise<void> {
     if (items.length < BatchWriteItemLimit) {
         return _batchWriteItem(items);
     }
@@ -402,7 +402,7 @@ export async function batchWriteItem(items: Array<BatchPutItem | BatchKeyItem>):
     }
 }
 
-async function _batchWriteItem(items: Array<BatchPutItem | BatchKeyItem>): Promise<void> {
+async function _batchWriteItem(items: BatchWriteItem[]): Promise<void> {
     const params: BatchWriteCommandInput = {
         RequestItems: {},
     };
@@ -413,13 +413,7 @@ async function _batchWriteItem(items: Array<BatchPutItem | BatchKeyItem>): Promi
             requestItem = [];
             params.RequestItems[item.tableName] = requestItem;
         }
-
-        if (item instanceof BatchPutItem) {
-            requestItem.push({PutRequest: {Item: item.item}});
-        }
-        else if (item instanceof BatchKeyItem) {
-            requestItem.push({DeleteRequest: {Key: item.key}});
-        }
+        requestItem.push(item.toBatchWriteParams());
     }
 
     return __batchWriteItem(params);
