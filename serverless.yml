@@ -10,6 +10,9 @@ plugins:
   - serverless-webpack
 
 custom:
+  splitStacks:
+    perFunction: false
+    perType: true
   stages:
     - dev
   webpack:
