@@ -1,5 +1,5 @@
 import {ConditionExpression} from "./expressions/conditionExpression";
-import {DynamodbItem, DynamoDBKey} from "./dynamodb";
+import {DynamoDBItem, DynamoDBKey} from "./dynamodb";
 import {DeleteCommandInput, PutCommandInput, UpdateCommandInput} from "@aws-sdk/lib-dynamodb";
 import {ExpressionAttributes} from "./expressions/expression";
 import {
@@ -8,7 +8,7 @@ import {
     UpdateExpression
 } from "./expressions/updateExpression";
 
-function markTimestamp(item: DynamodbItem): void {
+function markTimestamp(item: DynamoDBItem): void {
     const now = Date.now();
     item.createdAt = item.createdAt || now;
     item.updatedAt = now;
@@ -17,7 +17,7 @@ function markTimestamp(item: DynamodbItem): void {
     }
 }
 
-export function toPutItemParams(tableName: string, item: DynamodbItem, condition?: ConditionExpression): PutCommandInput {
+export function toPutItemParams(tableName: string, item: DynamoDBItem, condition?: ConditionExpression): PutCommandInput {
     markTimestamp(item);
     const params: PutCommandInput = {
         TableName: tableName,

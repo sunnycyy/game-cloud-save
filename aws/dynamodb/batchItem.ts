@@ -1,4 +1,4 @@
-import {DynamodbItem, DynamoDBKey} from "./dynamodb";
+import {DynamoDBItem, DynamoDBKey} from "./dynamodb";
 
 abstract class BatchItem {
     private readonly _tableName: string;
@@ -37,14 +37,14 @@ export interface BatchWriteItem {
 }
 
 export class BatchPutItem extends BatchItem implements BatchWriteItem {
-    private readonly _item: DynamodbItem;
+    private readonly _item: DynamoDBItem;
 
-    constructor(tableName: string, item: DynamodbItem) {
+    constructor(tableName: string, item: DynamoDBItem) {
         super(tableName);
         this._item = item;
     }
 
-    toBatchWriteParams(): {PutRequest: {Item: DynamodbItem}} {
+    toBatchWriteParams(): {PutRequest: {Item: DynamoDBItem}} {
         return {PutRequest: {Item: this._item}};
     }
 }

@@ -37,7 +37,7 @@ const docClient = DynamoDBDocumentClient.from(client, {
     },
 });
 
-export interface DynamodbItem extends DynamoDBKey {
+export interface DynamoDBItem extends DynamoDBKey {
     createdAt: number,
     updatedAt: number,
     expireAt?: number,
@@ -46,7 +46,7 @@ export interface DynamodbItem extends DynamoDBKey {
 
 export type DynamoDBKey = Record<string, NonNullable<any>>;
 
-export async function getItem(tableName: string, key: DynamoDBKey, projection?: ProjectionExpression): Promise<DynamodbItem> {
+export async function getItem(tableName: string, key: DynamoDBKey, projection?: ProjectionExpression): Promise<DynamoDBItem> {
     const params: GetCommandInput = {
         TableName: tableName,
         Key: key,
@@ -58,10 +58,10 @@ export async function getItem(tableName: string, key: DynamoDBKey, projection?: 
         params.ExpressionAttributeNames = attributes.keys;
     }
     const response = await docClient.send(new GetCommand(params));
-    return response.Item as DynamodbItem;
+    return response.Item as DynamoDBItem;
 }
 
-export async function putItem(tableName: string, item: DynamodbItem, condition?: ConditionExpression): Promise<void> {
+export async function putItem(tableName: string, item: DynamoDBItem, condition?: ConditionExpression): Promise<void> {
     await docClient.send(new PutCommand(toPutItemParams(tableName, item, condition)));
 }
 
@@ -70,9 +70,9 @@ export async function updateItem(
     key: DynamoDBKey,
     updates: UpdateExpression | UpdateExpression[],
     condition?: ConditionExpression
-): Promise<DynamodbItem> {
+): Promise<DynamoDBItem> {
     const response = await docClient.send(new UpdateCommand(toUpdateItemParams(tableName, key, updates, condition)));
-    return response.Attributes as DynamodbItem;
+    return response.Attributes as DynamoDBItem;
 }
 
 export async function deleteItem(tableName: string, key: DynamoDBKey, condition?: ConditionExpression): Promise<void> {
@@ -84,7 +84,7 @@ export async function scan(
     filter?: ConditionExpression,
     projection?: ProjectionExpression,
     limit?: number
-): Promise<DynamodbItem[]> {
+): Promise<DynamoDBItem[]> {
     const params: ScanCommandInput = {
         TableName: tableName,
         ConsistentRead: true,
@@ -121,7 +121,7 @@ export async function query(
     filter?: ConditionExpression,
     projection?: ProjectionExpression,
     limit?: number,
-): Promise<DynamodbItem[]> {
+): Promise<DynamoDBItem[]> {
     const params: QueryCommandInput = {
         TableName: tableName,
         ConsistentRead: true,
@@ -137,7 +137,7 @@ export async function queryByDescending(
     filter?: ConditionExpression,
     projection?: ProjectionExpression,
     limit?: number,
-): Promise<DynamodbItem[]> {
+): Promise<DynamoDBItem[]> {
     const params: QueryCommandInput = {
         TableName: tableName,
         ConsistentRead: true,
@@ -155,7 +155,7 @@ export async function queryIndex(
     filter?: ConditionExpression,
     projection?: ProjectionExpression,
     limit?: number,
-): Promise<DynamodbItem[]> {
+): Promise<DynamoDBItem[]> {
     const params: QueryCommandInput = {
         TableName: tableName,
         IndexName: indexName,
@@ -173,7 +173,7 @@ export async function queryIndexByDescending(
     filter?: ConditionExpression,
     projection?: ProjectionExpression,
     limit?: number,
-): Promise<DynamodbItem[]> {
+): Promise<DynamoDBItem[]> {
     const params: QueryCommandInput = {
         TableName: tableName,
         IndexName: indexName,
@@ -191,7 +191,7 @@ async function _query(
     filter?: ConditionExpression,
     projection?: ProjectionExpression,
     limit?: number,
-): Promise<DynamodbItem[]> {
+): Promise<DynamoDBItem[]> {
     if (limit && limit > 0) {
         params.Limit = limit;
     }
@@ -220,10 +220,10 @@ async function _query(
 async function processPaginatedResults(
     params: QueryCommandInput | ScanCommandInput,
     createCommandFn: (params: QueryCommandInput | ScanCommandInput) => QueryCommand | ScanCommand,
-    results: DynamodbItem[] = []
+    results: DynamoDBItem[] = []
 ) {
     const response: QueryCommandOutput | ScanCommandOutput = await docClient.send(createCommandFn(params));
-    results.push(...response.Items as DynamodbItem[]);
+    results.push(...response.Items as DynamoDBItem[]);
 
     if (response.LastEvaluatedKey && (!params.Limit || results.length < params.Limit)) {
         params.ExclusiveStartKey = response.LastEvaluatedKey;
@@ -238,12 +238,12 @@ const BatchMaxRetryCount = 3;
 export type BatchGetItemProjections = Record<string, ProjectionExpression>;
 const BatchGetItemLimit = 100;
 
-export async function batchGetItem(keys: BatchGetItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
+export async function batchGetItem(keys: BatchGetItem[], projections?: BatchGetItemProjections): Promise<DynamoDBItem[]> {
     if (keys.length < BatchGetItemLimit) {
         return _batchGetItem(keys, projections);
     }
 
-    const items: DynamodbItem[] = [];
+    const items: DynamoDBItem[] = [];
     const batchCount = Math.ceil(keys.length / BatchGetItemLimit);
     for (let i = 0; i < batchCount; i++) {
         const startIndex = i * BatchGetItemLimit;
@@ -255,7 +255,7 @@ export async function batchGetItem(keys: BatchGetItem[], projections?: BatchGetI
     return items;
 }
 
-async function _batchGetItem(keys: BatchGetItem[], projections?: BatchGetItemProjections): Promise<DynamodbItem[]> {
+async function _batchGetItem(keys: BatchGetItem[], projections?: BatchGetItemProjections): Promise<DynamoDBItem[]> {
     const params: BatchGetCommandInput = {
         RequestItems: {},
     };
@@ -281,10 +281,10 @@ async function _batchGetItem(keys: BatchGetItem[], projections?: BatchGetItemPro
     return __batchGetItem(params);
 }
 
-async function __batchGetItem(params: BatchGetCommandInput, results: DynamodbItem[] = [], retryCount = 0): Promise<DynamodbItem[]> {
+async function __batchGetItem(params: BatchGetCommandInput, results: DynamoDBItem[] = [], retryCount = 0): Promise<DynamoDBItem[]> {
     const response = await docClient.send(new BatchGetCommand(params));
     for (const items of Object.values(response.Responses)) {
-        results.push(...items as DynamodbItem[]);
+        results.push(...items as DynamoDBItem[]);
     }
 
     if (!response.UnprocessedKeys) {

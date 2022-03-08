@@ -1,4 +1,4 @@
-import {DynamodbItem, DynamoDBKey} from "./dynamodb";
+import {DynamoDBItem, DynamoDBKey} from "./dynamodb";
 import {ConditionExpression} from "./expressions/conditionExpression";
 import {
     SetAttributeExpression,
@@ -55,10 +55,10 @@ abstract class TransactKeyItem extends TransactItem {
 type TransactPutParams = TransactParams & TransactConditionParams & Pick<PutCommandInput, "Item">;
 
 export class TransactPutItem extends TransactItem {
-    private readonly item: DynamodbItem;
+    private readonly item: DynamoDBItem;
     private readonly condition: ConditionExpression;
 
-    constructor(tableName: string, item: DynamodbItem, condition?: ConditionExpression) {
+    constructor(tableName: string, item: DynamoDBItem, condition?: ConditionExpression) {
         super(tableName);
         this.item = item;
         this.condition = condition;
