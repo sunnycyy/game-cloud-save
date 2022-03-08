@@ -1,0 +1,17 @@
+Resources:
+  UserStorageTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: ${self:service}-${self:provider.stage}-user-storage
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: recordId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: recordId
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST

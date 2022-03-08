@@ -28,6 +28,29 @@ provider:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     Stage: ${self:provider.stage}
     Region: ${self:provider.region}
+    # DynamoDB Tables
+    UserStorageTable: ${self:service}-${self:provider.stage}-user-storage
+
+  httpApi:
+    authorizers:
+      userAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Join:
+            - ''
+            - - 'https://cognito-idp.'
+              - ${self:provider.region}
+              - '.amazonaws.com/'
+              - Ref: UserPool
+        audience:
+          - Ref: UserPoolClient
 
 functions:
-  
+
+
+resources:
+  - ${file(./resources/dynamodb-table.yml)}
+  - ${file(./resources/s3-bucket.yml)}
+  - ${file(./resources/cognito-user-pool.yml)}
+  - ${file(./resources/api-gateway.yml)}

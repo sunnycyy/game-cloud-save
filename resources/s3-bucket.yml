@@ -1,0 +1,6 @@
+Resources:
+  GameCloudSaveBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: ${self:service}-${self:provider.stage}-game-cloud-save
