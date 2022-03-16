@@ -1,0 +1,23 @@
+service: ${file(../config.yml):projectName}-s3
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-stage-manager
+
+custom:
+  stages: ${file(../stages.yml):stages}
+
+provider:
+  name: ${file(../config.yml):platform}
+  stage: ${opt:stage, file(../config.yml):defaultStage}
+  region: ${file(../config.yml):region}
+  profile: ${file(../config.yml):profile}
+
+resources:
+  Resources:
+    StorageBucket:
+      Type: AWS::S3::Bucket
+      DeletionPolicy: Retain
+      Properties:
+        BucketName: ${file(../config.yml):projectName}-${self:provider.stage}-storagebucket

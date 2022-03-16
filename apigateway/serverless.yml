@@ -1,0 +1,64 @@
+service: ${file(../config.yml):projectName}-apigateway
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-stage-manager
+  - serverless-iam-roles-per-function
+  - serverless-plugin-split-stacks
+  - serverless-webpack
+
+custom:
+  stages: ${file(../stages.yml):stages}
+  webpack:
+    webpackConfig: ../webpack.config.js
+    includeModules: true
+
+provider:
+  name: ${file(../config.yml):platform}
+  stage: ${opt:stage, file(../config.yml):defaultStage}
+  region: ${file(../config.yml):region}
+  profile: ${file(../config.yml):profile}
+  runtime: ${file(../config.yml):runtime}
+
+  httpApi:
+    cors: true
+    authorizers:
+      userAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Join:
+            - ''
+            - - 'https://cognito-idp.'
+              - ${self:provider.region}
+              - '.amazonaws.com/'
+              - Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolId
+        audience:
+          - Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId
+
+functions:
+  dummy:
+    handler: functions/dummy.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /dummy/userAuth
+          authorizer:
+            name: userAuthorizer
+
+resources:
+  Resources:
+    HttpApi:
+      Type: AWS::ApiGatewayV2::Api
+      Properties:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApi
+  Outputs:
+    HttpApiId:
+      Value: !Ref HttpApi
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId
+    HttpApiAuthorizerUserAuthorizerId:
+      Value: !Ref HttpApiAuthorizerUserAuthorizer
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiAuthorizerUserAuthorizerId

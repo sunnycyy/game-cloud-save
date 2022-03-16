@@ -1,5 +1,7 @@
-import * as slsw from "serverless-webpack";
-import * as nodeExternals from "webpack-node-externals";
+// eslint-disable-next-line @typescript-eslint/no-var-requires,no-undef
+const slsw = require("serverless-webpack");
+// eslint-disable-next-line @typescript-eslint/no-var-requires,no-undef
+const nodeExternals = require("webpack-node-externals");
 
 // eslint-disable-next-line no-undef
 module.exports = {
@@ -17,11 +19,17 @@ module.exports = {
                 test: /\.m?js$/,
                 exclude: /node_modules/,
                 loader: "babel-loader",
+                options: {
+                    rootMode: "upward"
+                },
             },
             {
                 test: /\.tsx?$/,
                 exclude: /node_modules/,
                 loader: "babel-loader",
+                options: {
+                    rootMode: "upward"
+                },
             },
         ],
     },

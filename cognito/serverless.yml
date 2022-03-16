@@ -1,0 +1,72 @@
+service: ${file(../config.yml):projectName}-cognito
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-stage-manager
+
+custom:
+  stages: ${file(../stages.yml):stages}
+
+provider:
+  name: ${file(../config.yml):platform}
+  stage: ${opt:stage, file(../config.yml):defaultStage}
+  region: ${file(../config.yml):region}
+  profile: ${file(../config.yml):profile}
+
+resources:
+  Resources:
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      DeletionPolicy: Retain
+      Properties:
+        UserPoolName: ${file(../config.yml):projectName}-${self:provider.stage}-UserPool
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+    UserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClient
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+          - profile
+          - aws.cognito.signin.user.admin
+        UserPoolId:
+          Ref: UserPool
+        CallbackURLs:
+          - https://localhost:3000
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        GenerateSecret: false
+        SupportedIdentityProviders:
+          - COGNITO
+    UserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId:
+          Ref: UserPool
+        Domain: ${file(../config.yml):projectName}-${self:provider.stage}-userpooldomain
+  Outputs:
+    UserPoolId:
+      Value: !Ref UserPool
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolId
+    UserPoolClientId:
+      Value: !Ref UserPoolClient
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId

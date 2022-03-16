@@ -1,6 +1,0 @@
-Resources:
-  HttpApi:
-    DependsOn: UserPool
-    Type: AWS::ApiGatewayV2::Api
-    Properties:
-      Name: ${self:service}-${self:provider.stage}-http-api

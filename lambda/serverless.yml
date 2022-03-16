@@ -1,0 +1,38 @@
+service: game-cloud-save-lambda
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-stage-manager
+  - serverless-iam-roles-per-function
+  - serverless-plugin-split-stacks
+  - serverless-webpack
+
+custom:
+  stages: ${file(../stages.yml):stages}
+  webpack:
+    webpackConfig: ../webpack.config.js
+    includeModules: true
+  authorizers:
+    userAuthorizer:
+      type: jwt
+      id: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiAuthorizerUserAuthorizerId
+
+provider:
+  name: ${file(../config.yml):platform}
+  stage: ${opt:stage, file(../config.yml):defaultStage}
+  region: ${file(../config.yml):region}
+  profile: ${file(../config.yml):profile}
+  runtime: ${file(../config.yml):runtime}
+
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    Stage: ${self:provider.stage}
+    Region: ${self:provider.region}
+    # DynamoDB Tables
+    UserRecordTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserRecordTable
+
+  httpApi:
+    id: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId
+
+functions:
