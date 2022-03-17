@@ -20,6 +20,8 @@ provider:
   region: ${file(../config.yml):region}
   profile: ${file(../config.yml):profile}
   runtime: ${file(../config.yml):runtime}
+  logRetentionInDays: ${file(../config.yml):logRetentionInDays}
+  versionFunctions: ${file(../config.yml):versionFunctions}
 
   httpApi:
     cors: true

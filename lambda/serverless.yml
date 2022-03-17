@@ -24,6 +24,8 @@ provider:
   region: ${file(../config.yml):region}
   profile: ${file(../config.yml):profile}
   runtime: ${file(../config.yml):runtime}
+  logRetentionInDays: ${file(../config.yml):logRetentionInDays}
+  versionFunctions: ${file(../config.yml):versionFunctions}
 
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
