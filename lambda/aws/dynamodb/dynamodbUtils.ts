@@ -45,7 +45,6 @@ export function toUpdateItemParams(
     const params: UpdateCommandInput = {
         TableName: tableName,
         Key: key,
-        ReturnValues: "ALL_NEW",
     };
 
     if (!Array.isArray(updates)) {

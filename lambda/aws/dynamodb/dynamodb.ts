@@ -71,7 +71,9 @@ export async function updateItem(
     updates: UpdateExpression | UpdateExpression[],
     condition?: ConditionExpression
 ): Promise<DynamoDBItem> {
-    const response = await docClient.send(new UpdateCommand(toUpdateItemParams(tableName, key, updates, condition)));
+    const params = toUpdateItemParams(tableName, key, updates, condition);
+    params.ReturnValues = "ALL_NEW";
+    const response = await docClient.send(new UpdateCommand(params));
     return response.Attributes as DynamoDBItem;
 }
 
