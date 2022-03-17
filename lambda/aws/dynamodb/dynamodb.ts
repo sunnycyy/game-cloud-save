@@ -38,8 +38,8 @@ const docClient = DynamoDBDocumentClient.from(client, {
 });
 
 export interface DynamoDBItem extends DynamoDBKey {
-    createdAt: number,
-    updatedAt: number,
+    createdAt?: number,
+    updatedAt?: number,
     expireAt?: number,
     expireAt_TTL?: number,
 }
