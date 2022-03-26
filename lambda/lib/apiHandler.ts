@@ -1,7 +1,9 @@
 import {APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2} from "aws-lambda";
 
 export type EventData = Record<string, any> | undefined;
-export type EventClaims = Record<string, any>;
+export interface EventClaims {
+    userId: string,
+}
 export type EventHandler = (data: EventData, claims: EventClaims) => Promise<any>;
 
 export class ApiHandler {
@@ -20,18 +22,21 @@ export class ApiHandler {
             }
 
             const data: EventData = event.body ? JSON.parse(event.body) : undefined;
-            const claims: EventClaims = event.requestContext.authorizer.jwt.claims;
+            const claims: EventClaims = ApiHandler.toEventClaims(event.requestContext.authorizer.jwt.claims);
             const result = await handler(data, claims);
-            return this.createResponse(200, result);
+            return ApiHandler.createResponse(200, result);
         }
         catch (err) {
-            console.error(`Error occurred in event: ${JSON.stringify(event)}`);
-            console.error(err);
-            return this.createResponse(500, err);
+            console.error(`Error occurred in event: error=${err}, event=${JSON.stringify(event)}`);
+            return ApiHandler.createResponse(500, err);
         }
     }
 
-    private createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
+    private static toEventClaims(jwtAuthorizerClaims: Record<string, any>): EventClaims {
+        return {userId: jwtAuthorizerClaims.sub};
+    }
+
+    private static createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
         return {
             statusCode,
             body: (typeof body === "object") ? JSON.stringify(body) : body.toString(),
