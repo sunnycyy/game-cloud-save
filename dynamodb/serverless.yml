@@ -16,19 +16,35 @@ provider:
 
 resources:
   Resources:
-    UserRecordTable:
+    UserGameTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
       Properties:
-        TableName: ${file(../config.yml):projectName}-${self:provider.stage}-UserRecordTable
+        TableName: ${file(../config.yml):projectName}-${self:provider.stage}-UserGameTable
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: recordId
+          - AttributeName: gameId
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: recordId
+          - AttributeName: gameId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+    UserCloudSaveTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${file(../config.yml):projectName}-${self:provider.stage}-UserCloudSaveTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: createdAt
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST

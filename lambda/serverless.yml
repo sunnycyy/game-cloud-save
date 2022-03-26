@@ -32,7 +32,8 @@ provider:
     Stage: ${self:provider.stage}
     Region: ${self:provider.region}
     # DynamoDB Tables
-    UserRecordTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserRecordTable
+    UserGameTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserGameTable
+    UserCloudSaveTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserCloudSaveTable
 
   httpApi:
     id: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId

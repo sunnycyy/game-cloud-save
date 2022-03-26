@@ -1,21 +1,24 @@
-import {getUserRecord, getUserRecords, putUserRecord, UserRecord} from "./userRecord";
-import {UserRecordType} from "./userRecordType";
+import {DynamoDBItem} from "../aws/dynamodb/dynamodb";
+import * as DynamoDB from "../aws/dynamodb/dynamodb";
 
-export interface GameRecord extends UserRecord {
+export interface GameRecord extends DynamoDBItem {
+    userId: string,
     gameId: string,
     name: string,
 }
 
+const UserGameTable = process.env.UserGameTable;
+
 export async function getGames(userId: string): Promise<GameRecord[]> {
-    const records = await getUserRecords(userId, UserRecordType.Game);
+    const records = await DynamoDB.query(UserGameTable, {userId});
     return records as GameRecord[];
 }
 
 export async function getGame(userId: string, gameId: string): Promise<GameRecord> {
-    const record = await getUserRecord(userId, UserRecordType.Game, gameId);
+    const record = await DynamoDB.getItem(UserGameTable, {userId, gameId});
     return record as GameRecord;
 }
 
 export async function putGame(userId: string, record: GameRecord): Promise<void> {
-    await putUserRecord(userId, UserRecordType.Game, record.gameId, record);
+    await DynamoDB.putItem(UserGameTable, record);
 }
