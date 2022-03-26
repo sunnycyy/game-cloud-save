@@ -26,10 +26,9 @@ interface AddGameData extends EventData {
 }
 
 async function addGame(data: AddGameData, claims: EventClaims): Promise<GameRecord> {
-    assertDefined(data);
-
     const {userId} = claims;
     const {gameName} = data;
+    assertDefined({gameName});
 
     const game: GameRecord = {
         gameId: uuidv4(),
@@ -46,10 +45,9 @@ interface UpdateGameData extends EventData {
 }
 
 async function updateGame(data: UpdateGameData, claims: EventClaims): Promise<GameRecord> {
-    assertDefined(data, ["name"]);
-
     const {userId} = claims;
     const {gameId, name} = data;
+    assertDefined({gameId});
 
     const game = await Game.getGame(userId, gameId);
     assert(!!game, "GAME_NOT_EXIST");

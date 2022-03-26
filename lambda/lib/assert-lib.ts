@@ -1,11 +1,7 @@
 import {strict as assert} from "assert";
 
-export function assertDefined(map: Record<string, any>, excludedKeys?: string[]): void {
+export function assertDefined(map: Record<string, any>): void {
     for (const [key, value] of Object.entries(map)) {
-        if (excludedKeys.includes(key)) {
-            continue;
-        }
-
-        assert.notEqual(value, undefined, `FIELD_UNDEFINED: ${key}`);
+        assert.notEqual(value, undefined, `VALUE_UNDEFINED: ${key}`);
     }
 }
