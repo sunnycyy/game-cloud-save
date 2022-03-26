@@ -118,3 +118,6 @@ dist
 
 # JetBrains
 .idea
+
+# Webpack directories
+.webpack/
