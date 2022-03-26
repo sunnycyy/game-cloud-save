@@ -1,8 +1,8 @@
-import {DynamoDBItem} from "../aws/dynamodb/dynamodb";
 import * as DynamoDB from "../aws/dynamodb/dynamodb";
+import {DynamoDBItem} from "../aws/dynamodb/dynamodb";
 
 export interface GameRecord extends DynamoDBItem {
-    userId: string,
+    userId?: string,
     gameId: string,
     name: string,
 }
@@ -20,5 +20,6 @@ export async function getGame(userId: string, gameId: string): Promise<GameRecor
 }
 
 export async function putGame(userId: string, record: GameRecord): Promise<void> {
+    record.userId = userId;
     await DynamoDB.putItem(UserGameTable, record);
 }
