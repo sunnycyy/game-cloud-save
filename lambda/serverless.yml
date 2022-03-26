@@ -41,6 +41,21 @@ provider:
 functions:
   gameService:
     handler: functions/gameService/gameService.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - 'dynamodb:GetItem'
+          - 'dynamodb:PutItem'
+          - 'dynamodb:Query'
+        Resource:
+          Fn::Join:
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - ${self:provider.region}
+              - ':'
+              - Ref: AWS::AccountId
+              - ':table/'
+              - ${self:provider.environment.UserGameTable}
     events:
       - httpApi:
           path: /gameService/getAllGames
@@ -56,6 +71,21 @@ functions:
           authorizer: ${self:custom.authorizers.userAuthorizer}
   cloudSaveService:
     handler: functions/cloudSaveService/cloudSaveService.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - 'dynamodb:GetItem'
+          - 'dynamodb:PutItem'
+          - 'dynamodb:Query'
+        Resource:
+          Fn::Join:
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - ${self:provider.region}
+              - ':'
+              - Ref: AWS::AccountId
+              - ':table/'
+              - ${self:provider.environment.UserCloudSaveTable}
     events:
       - httpApi:
           path: /cloudSaveService/getAllCloudSaves
