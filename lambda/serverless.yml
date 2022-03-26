@@ -54,3 +54,14 @@ functions:
           path: /gameService/updateGame
           method: POST
           authorizer: ${self:custom.authorizers.userAuthorizer}
+  cloudSaveService:
+    handler: functions/cloudSaveService/cloudSaveService.handler
+    events:
+      - httpApi:
+          path: /cloudSaveService/getAllCloudSaves
+          method: POST
+          authorizer: ${self:custom.authorizers.userAuthorizer}
+      - httpApi:
+          path: /cloudSaveService/recordCloudSave
+          method: POST
+          authorizer: ${self:custom.authorizers.userAuthorizer}
