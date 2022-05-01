@@ -1,31 +1,45 @@
 import * as DynamoDB from "../aws/dynamodb/dynamodb";
 import {DynamoDBItem} from "../aws/dynamodb/dynamodb";
 import {genKey} from "./utils";
+import {Platform} from "./platform-lib";
 
-export enum SavePathType {
-    File,
-    Directory,
-}
-
-export enum SavePathRootType {
+enum SaveFileRoot {
     GameInstallPath,
+    UserDocuments,
 
     // Windows specific
-    WindowsAppData,
-    WindowsLocalAppData,
-    WindowsLocalLowAppData,
+    WindowsAppDataLocal,
+    WindowsAppDataLocalLow,
+    WindowsAppDataRoaming,
 }
+
+const PlatformAvailableRootType = Object.freeze({
+    [Platform.Windows]: [
+        SaveFileRoot.GameInstallPath,
+        SaveFileRoot.UserDocuments,
+        SaveFileRoot.WindowsAppDataLocal,
+        SaveFileRoot.WindowsAppDataLocalLow,
+        SaveFileRoot.WindowsAppDataRoaming,
+    ],
+    [Platform.Mac]: [
+        SaveFileRoot.GameInstallPath,
+        SaveFileRoot.UserDocuments,
+    ],
+});
 
 export interface CloudSaveRecord extends DynamoDBItem {
     id?: string,
     userId?: string,
     gameId?: string,
-    platform: string,
+    platform: Platform,
     version: string,
-    savePathType: SavePathType,
-    savePathRootType: SavePathRootType,
-    savePath: string,
+    saveFiles: CloudSaveFile[],
     saveS3Path: string,
+}
+
+export interface CloudSaveFile {
+    root: SaveFileRoot,
+    filePath: string,
 }
 
 const UserCloudSaveTable = process.env.UserCloudSaveTable;
@@ -52,4 +66,8 @@ export async function putCloudSave(userId: string, gameId: string, record: Cloud
     record.userId = userId;
     record.gameId = gameId;
     await DynamoDB.putItem(UserCloudSaveTable, record);
+}
+
+export function isRootTypeAvailableOnPlatform(root: SaveFileRoot, platform: Platform): boolean {
+    return PlatformAvailableRootType[platform].includes(root);
 }
