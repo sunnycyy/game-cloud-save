@@ -34,11 +34,32 @@ provider:
     # DynamoDB Tables
     UserGameTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserGameTable
     UserCloudSaveTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserCloudSaveTable
+    # Cognito
+    UserPoolClientId: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId
 
   httpApi:
     id: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId
 
 functions:
+  authService:
+    handler: functions/authService/authService.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - 'cognito-idp:InitiateAuth'
+        Resource:
+          Fn::Join:
+            - ''
+            - - 'arn:aws:cognito-idp:'
+              - ${self:provider.region}
+              - ':'
+              - Ref: AWS::AccountId
+              - ':userpool/'
+              - !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolId
+    events:
+      - httpApi:
+          path: /authService/userAuth
+          method: POST
   gameService:
     handler: functions/gameService/gameService.handler
     iamRoleStatements:
