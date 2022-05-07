@@ -1,13 +1,15 @@
 import {APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2} from "aws-lambda";
 import {ApiHandler, EventClaims, EventData} from "../../lib/apiHandler";
+import {assertDefined, assertExist, assertNotEmpty} from "../../lib/assert-lib";
 import * as CloudSave from "../../lib/cloudSave-lib";
 import {CloudSaveFile, CloudSaveRecord} from "../../lib/cloudSave-lib";
-import {assertDefined, assertNotEmpty} from "../../lib/assert-lib";
 import {Platform} from "../../lib/platform-lib";
 
 const handlers = Object.freeze({
     getAllCloudSaves,
-    recordCloudSave,
+    requestUploadCloudSave,
+    completeUploadCloudSave,
+    requestDownloadCloudSave,
 });
 
 export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> {
@@ -26,31 +28,39 @@ async function getAllCloudSaves(data: GetAllCloudSavesData, claims: EventClaims)
     return CloudSave.getCloudSaves(userId, gameId);
 }
 
-interface RecordCloudSaveData extends EventData {
+interface RequestUploadCloudSaveData extends EventData {
     gameId: string,
     platform: Platform,
     version: string,
     saveFiles: CloudSaveFile[],
-    saveS3Path: string,
 }
 
-async function recordCloudSave(data: RecordCloudSaveData, claims: EventClaims): Promise<CloudSaveRecord> {
+interface RequestUploadCloudSaveResult {
+    cloudSave: CloudSaveRecord,
+    uploadUrl: string,
+}
+
+async function requestUploadCloudSave(data: RequestUploadCloudSaveData, claims: EventClaims): Promise<RequestUploadCloudSaveResult> {
     const {userId} = claims;
-    const {gameId, platform, version, saveFiles, saveS3Path} = data;
-    assertDefined({gameId, platform, version, saveFiles, saveS3Path});
+    const {gameId, platform, version, saveFiles} = data;
+    assertDefined({gameId, platform, version, saveFiles});
     assertNotEmpty({saveFiles});
 
     verifyCloudSaveFiles(platform, saveFiles);
 
+    const createdAt = Date.now();
     const cloudSave: CloudSaveRecord = {
         platform,
         version,
         saveFiles,
-        saveS3Path,
+        createdAt,
+        cloudStoragePath: `cloudSaves/${userId}/${gameId}/${createdAt}.zip`,
+        uploaded: false,
     };
-
     await CloudSave.putCloudSave(userId, gameId, cloudSave);
-    return cloudSave;
+
+    const uploadUrl = await CloudSave.getUploadCloudSaveFileUrl(cloudSave.cloudStoragePath);
+    return {cloudSave, uploadUrl};
 }
 
 function verifyCloudSaveFiles(platform: Platform, saveFiles: CloudSaveFile[]): void {
@@ -59,4 +69,42 @@ function verifyCloudSaveFiles(platform: Platform, saveFiles: CloudSaveFile[]): v
             throw `INVALID_SAVE_FILE_ROOT: ${saveFile.filePath}`;
         }
     }
+}
+
+interface CompleteUploadCloudSave extends EventData {
+    gameId: string,
+    createdAt: number,
+}
+
+async function completeUploadCloudSave(data: CompleteUploadCloudSave, claims: EventClaims): Promise<CloudSaveRecord> {
+    const {userId} = claims;
+    const {gameId, createdAt} = data;
+    assertDefined({gameId, createdAt});
+
+    const cloudSave = await CloudSave.getCloudSave(userId, gameId, createdAt);
+    assertExist({cloudSave});
+
+    if (!await CloudSave.isCloudSaveFileUploaded(cloudSave.cloudStoragePath)) {
+        throw "CLOUD_SAVE_FILE_NOT_UPLOADED";
+    }
+
+    cloudSave.uploaded = true;
+    await CloudSave.putCloudSave(userId, gameId, cloudSave);
+    return cloudSave;
+}
+
+interface RequestDownloadCloudSaveData extends EventData {
+    gameId: string,
+    createdAt: number,
+}
+
+async function requestDownloadCloudSave(data: RequestDownloadCloudSaveData, claims: EventClaims): Promise<string> {
+    const {userId} = claims;
+    const {gameId, createdAt} = data;
+    assertDefined({gameId, createdAt});
+
+    const cloudSave = await CloudSave.getCloudSave(userId, gameId, createdAt);
+    assertExist({cloudSave});
+
+    return CloudSave.getDownloadCloudSaveFileUrl(cloudSave.cloudStoragePath);
 }

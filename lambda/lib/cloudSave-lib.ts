@@ -1,7 +1,8 @@
 import * as DynamoDB from "../aws/dynamodb/dynamodb";
 import {DynamoDBItem} from "../aws/dynamodb/dynamodb";
-import {genKey} from "./utils";
+import * as S3 from "../aws/s3/s3";
 import {Platform} from "./platform-lib";
+import {genKey} from "./utils";
 
 enum SaveFileRoot {
     GameInstallPath,
@@ -34,7 +35,8 @@ export interface CloudSaveRecord extends DynamoDBItem {
     platform: Platform,
     version: string,
     saveFiles: CloudSaveFile[],
-    saveS3Path: string,
+    cloudStoragePath: string,
+    uploaded: boolean,
 }
 
 export interface CloudSaveFile {
@@ -43,6 +45,7 @@ export interface CloudSaveFile {
 }
 
 const UserCloudSaveTable = process.env.UserCloudSaveTable;
+const StorageBucket = process.env.StorageBucket;
 
 function getId(userId: string, gameId: string): string {
     return genKey(userId, gameId)
@@ -61,8 +64,7 @@ export async function getCloudSave(userId: string, gameId: string, createdAt: nu
 }
 
 export async function putCloudSave(userId: string, gameId: string, record: CloudSaveRecord): Promise<void> {
-    const id = getId(userId, gameId);
-    record.id = id;
+    record.id = getId(userId, gameId);
     record.userId = userId;
     record.gameId = gameId;
     await DynamoDB.putItem(UserCloudSaveTable, record);
@@ -70,4 +72,16 @@ export async function putCloudSave(userId: string, gameId: string, record: Cloud
 
 export function isRootTypeAvailableOnPlatform(root: SaveFileRoot, platform: Platform): boolean {
     return PlatformAvailableRootType[platform].includes(root);
+}
+
+export async function getUploadCloudSaveFileUrl(path: string): Promise<string> {
+    return S3.getUploadFilePresignedUrl(StorageBucket, path, 60);
+}
+
+export async function isCloudSaveFileUploaded(path: string): Promise<boolean> {
+    return S3.isFileExists(StorageBucket, path);
+}
+
+export async function getDownloadCloudSaveFileUrl(path: string): Promise<string> {
+    return S3.getDownloadFilePresignedUrl(StorageBucket, path, 300);
 }

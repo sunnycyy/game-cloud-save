@@ -34,7 +34,9 @@ provider:
     # DynamoDB Tables
     UserGameTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserGameTable
     UserCloudSaveTable: ${file(../config.yml):projectName}-${self:provider.stage}-UserCloudSaveTable
-    # Cognito
+    # S3 Bucket
+    StorageBucket: ${file(../config.yml):projectName}-${self:provider.stage}-storagebucket
+    # Cognito Client
     UserPoolClientId: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId
 
   httpApi:
@@ -107,12 +109,31 @@ functions:
               - Ref: AWS::AccountId
               - ':table/'
               - ${self:provider.environment.UserCloudSaveTable}
+      - Effect: Allow
+        Action:
+          - 's3:GetObject'
+          - 's3:PutObject'
+          - 's3:ListBucket'
+        Resource:
+          Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - ${self:provider.environment.StorageBucket}
+              - '/cloudSaves/*'
     events:
       - httpApi:
           path: /cloudSaveService/getAllCloudSaves
           method: POST
           authorizer: ${self:custom.authorizers.userAuthorizer}
       - httpApi:
-          path: /cloudSaveService/recordCloudSave
+          path: /cloudSaveService/requestUploadCloudSave
+          method: POST
+          authorizer: ${self:custom.authorizers.userAuthorizer}
+      - httpApi:
+          path: /cloudSaveService/completeUploadCloudSave
+          method: POST
+          authorizer: ${self:custom.authorizers.userAuthorizer}
+      - httpApi:
+          path: /cloudSaveService/requestDownloadCloudSave
           method: POST
           authorizer: ${self:custom.authorizers.userAuthorizer}
