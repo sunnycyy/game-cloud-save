@@ -50,7 +50,7 @@ resources:
         CallbackURLs:
           - https://localhost:3000
         ExplicitAuthFlows:
-          - ALLOW_USER_SRP_AUTH
+          - ALLOW_USER_PASSWORD_AUTH
           - ALLOW_REFRESH_TOKEN_AUTH
         GenerateSecret: false
         SupportedIdentityProviders:
