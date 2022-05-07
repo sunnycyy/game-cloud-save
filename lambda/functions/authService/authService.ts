@@ -1,7 +1,8 @@
 import {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
-import {ApiHandler, EventData} from "../../lib/apiHandler";
 import * as Cognito from "../../aws/cognito/cognito";
 import {AuthResult} from "../../aws/cognito/cognito";
+import {ApiHandler, EventData} from "../../lib/apiHandler";
+import {assertDefined} from "../../lib/assert-lib";
 
 const handlers = Object.freeze({
     userAuth,
@@ -18,6 +19,7 @@ interface UserAuthData extends EventData {
 
 async function userAuth(data: UserAuthData): Promise<AuthResult> {
     const {username, password} = data;
-    const clientId = process.env.UserPoolClientId;
-    return Cognito.usernamePasswordAuth(clientId, username, password);
+    assertDefined({username, password});
+
+    return Cognito.usernamePasswordAuth(process.env.UserPoolClientId, username, password);
 }
