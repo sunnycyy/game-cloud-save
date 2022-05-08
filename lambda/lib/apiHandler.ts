@@ -1,5 +1,6 @@
 import {APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2, Context} from "aws-lambda";
 import {APIGatewayProxyEventV2} from "aws-lambda/trigger/api-gateway-proxy";
+import {ServerException} from "./exception-lib";
 
 export type EventData = Record<string, any> | undefined;
 export interface EventClaims {
@@ -7,13 +8,19 @@ export interface EventClaims {
 }
 export type EventHandler = (data: EventData, claims: EventClaims) => Promise<any>;
 
+class EventHandlerNotFoundException extends ServerException {
+    constructor(eventPath) {
+        super("EventHandlerNotFoundException", `Handler not found: ${eventPath}`, {eventPath});
+    }
+}
+
 export const ApiHandler = Object.freeze({
     handle: async (event: APIGatewayProxyEventV2 | APIGatewayProxyEventV2WithJWTAuthorizer, context: Context, handlers: Record<string, EventHandler>) => {
         try {
             const path = event.rawPath.substring(event.rawPath.lastIndexOf("/") + 1);
             const handler = handlers[path];
             if (!handler) {
-                throw "HANDLER_NOT_FOUND";
+                throw new EventHandlerNotFoundException(event.rawPath);
             }
 
             const data: EventData = event.body ? JSON.parse(event.body) : undefined;
@@ -25,12 +32,7 @@ export const ApiHandler = Object.freeze({
         catch (error) {
             console.error(error);
             console.error(`Error occurred when processing event: ${JSON.stringify(event)}`);
-            switch (typeof error) {
-                case "object":
-                    return !Array.isArray(error) ? exception(error) : badRequest(JSON.stringify(error));
-                default:
-                    return badRequest(error);
-            }
+            return failure(error);
         }
     }
 });
@@ -51,28 +53,36 @@ export function success(body): APIGatewayProxyResultV2 {
 }
 
 interface EventError {
-    error: string,
+    type: string,
     message: string,
+    data?: Record<string, any>,
 }
 
-export function failure(error: EventError): APIGatewayProxyResultV2 {
-    return createResponse(500, error);
+function isServiceException(error) {
+    return !!error.$fault;
 }
 
-type Exception = Error | Record<string, any>;
-
-export function exception(error: Exception): APIGatewayProxyResultV2 {
-    const json = JSON.stringify(error);
-    let message;
-    if (error.stack) {
-        message = (Object.keys(error).length > 0) ? `${error.stack}\n${json}` : error.stack;
+export function failure(error): APIGatewayProxyResultV2 {
+    let eventError: EventError;
+    if (error instanceof ServerException) {
+        eventError = {
+            type: error.name,
+            message: error.stack,
+            data: error.data,
+        };
+    }
+    else if (isServiceException(error)) {
+        eventError = {
+            type: error.name,
+            message: error.stack,
+            data: error,
+        };
     }
     else {
-        message = json;
+        eventError = {
+            type: "RuntimeException",
+            message: error.stack,
+        };
     }
-    return failure({error: "ServerException", message});
-}
-
-export function badRequest(error: Exclude<any, Exception>): APIGatewayProxyResultV2 {
-    return failure({error: "ValidationFailedException", message: error.toString()});
+    return createResponse(500, eventError);
 }

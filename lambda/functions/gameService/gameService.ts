@@ -2,9 +2,8 @@ import {APIGatewayProxyHandlerV2WithJWTAuthorizer} from "aws-lambda";
 import {v4 as uuidv4} from "uuid";
 import {ApiHandler, EventClaims, EventData, EventHandler} from "../../lib/apiHandler";
 import * as Game from "../../lib/game-lib";
-import {assertDefined} from "../../lib/assert-lib";
+import {assertCondition, assertDefined, assertExist} from "../../lib/assert-lib";
 import {GameRecord} from "../../lib/game-lib";
-import {strict as assert} from "assert";
 
 const handlers: Record<string, EventHandler> = Object.freeze({
     getAllGames,
@@ -50,7 +49,7 @@ async function updateGame(data: UpdateGameData, claims: EventClaims): Promise<Ga
     assertDefined({gameId});
 
     const game = await Game.getGame(userId, gameId);
-    assert(!!game, "GAME_NOT_EXIST");
+    assertExist({game});
 
     let updated = false;
     if (name) {
@@ -58,7 +57,7 @@ async function updateGame(data: UpdateGameData, claims: EventClaims): Promise<Ga
         updated = true;
     }
 
-    assert(updated, "GAME_NO_UPDATE");
+    assertCondition(updated, "Game no update");
 
     await Game.putGame(userId, game);
     return game;

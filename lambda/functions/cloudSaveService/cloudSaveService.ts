@@ -1,6 +1,6 @@
 import {APIGatewayProxyHandlerV2WithJWTAuthorizer} from "aws-lambda";
 import {ApiHandler, EventClaims, EventData, EventHandler} from "../../lib/apiHandler";
-import {assertDefined, assertExist, assertNotEmpty} from "../../lib/assert-lib";
+import {assertCondition, assertDefined, assertExist, assertArrayNotEmpty} from "../../lib/assert-lib";
 import * as CloudSave from "../../lib/cloudSave-lib";
 import {CloudSaveFile, CloudSaveRecord} from "../../lib/cloudSave-lib";
 import {Platform} from "../../lib/platform-lib";
@@ -44,7 +44,7 @@ async function requestUploadCloudSave(data: RequestUploadCloudSaveData, claims: 
     const {userId} = claims;
     const {gameId, platform, version, saveFiles} = data;
     assertDefined({gameId, platform, version, saveFiles});
-    assertNotEmpty({saveFiles});
+    assertArrayNotEmpty({saveFiles});
 
     verifyCloudSaveFiles(platform, saveFiles);
 
@@ -65,9 +65,7 @@ async function requestUploadCloudSave(data: RequestUploadCloudSaveData, claims: 
 
 function verifyCloudSaveFiles(platform: Platform, saveFiles: CloudSaveFile[]): void {
     for (const saveFile of saveFiles) {
-        if (!CloudSave.isRootTypeAvailableOnPlatform(saveFile.root, platform)) {
-            throw `INVALID_SAVE_FILE_ROOT: ${saveFile.filePath}`;
-        }
+        assertCondition(CloudSave.isRootTypeAvailableOnPlatform(saveFile.root, platform), "Invalid save file root", saveFile);
     }
 }
 
@@ -84,9 +82,8 @@ async function completeUploadCloudSave(data: CompleteUploadCloudSave, claims: Ev
     const cloudSave = await CloudSave.getCloudSave(userId, gameId, createdAt);
     assertExist({cloudSave});
 
-    if (!await CloudSave.isCloudSaveFileUploaded(cloudSave.cloudStoragePath)) {
-        throw "CLOUD_SAVE_FILE_NOT_UPLOADED";
-    }
+    const fileUploaded = await CloudSave.isCloudSaveFileUploaded(cloudSave.cloudStoragePath);
+    assertCondition(fileUploaded, "Cloud save file not uploaded", {cloudStoragePath: cloudSave.cloudStoragePath});
 
     cloudSave.uploaded = true;
     await CloudSave.putCloudSave(userId, gameId, cloudSave);
