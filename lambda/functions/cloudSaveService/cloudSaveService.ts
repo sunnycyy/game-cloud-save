@@ -3,6 +3,7 @@ import {ApiHandler, EventClaims, EventData, EventHandler} from "../../lib/apiHan
 import {assertCondition, assertDefined, assertExist, assertArrayNotEmpty} from "../../lib/assert-lib";
 import * as CloudSave from "../../lib/cloudSave-lib";
 import {CloudSaveFile, CloudSaveRecord} from "../../lib/cloudSave-lib";
+import {Hour} from "../../lib/constant-lib";
 import {Platform} from "../../lib/platform-lib";
 
 const handlers: Record<string, EventHandler> = Object.freeze({
@@ -56,6 +57,7 @@ async function requestUploadCloudSave(data: RequestUploadCloudSaveData, claims: 
         createdAt,
         cloudStoragePath: `cloudSaves/${userId}/${gameId}/${createdAt}.zip`,
         uploaded: false,
+        expireAt: Date.now() + Hour,
     };
     await CloudSave.putCloudSave(userId, gameId, cloudSave);
 
@@ -86,6 +88,8 @@ async function completeUploadCloudSave(data: CompleteUploadCloudSave, claims: Ev
     assertCondition(fileUploaded, "Cloud save file not uploaded", {cloudStoragePath: cloudSave.cloudStoragePath});
 
     cloudSave.uploaded = true;
+    delete cloudSave.expireAt;
+
     await CloudSave.putCloudSave(userId, gameId, cloudSave);
     return cloudSave;
 }
