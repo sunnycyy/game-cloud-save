@@ -2,11 +2,12 @@ import {ExpressionAttributes} from "./expression";
 import {ConditionExpression} from "./conditionExpression";
 import {LogicalJoinOp} from "./logicalJoinOp";
 
-abstract class LogicalJoinExpression implements ConditionExpression {
+abstract class LogicalJoinExpression extends ConditionExpression {
     private readonly logicalOp: LogicalJoinOp;
     private readonly conditions: ConditionExpression[];
 
     protected constructor(logicalOp: LogicalJoinOp, conditions: ConditionExpression[]) {
+        super();
         this.conditions = conditions;
     }
 
@@ -27,10 +28,11 @@ export class OrExpression extends LogicalJoinExpression {
     }
 }
 
-export class NotExpression implements ConditionExpression {
+export class NotExpression extends ConditionExpression {
     private readonly _condition: ConditionExpression;
 
     constructor(condition: ConditionExpression) {
+        super();
         this._condition = condition;
     }
 
