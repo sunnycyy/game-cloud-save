@@ -1,4 +1,4 @@
-import {APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2} from "aws-lambda";
+import {APIGatewayProxyHandlerV2WithJWTAuthorizer} from "aws-lambda";
 import {ApiHandler, EventClaims, EventData, EventHandler} from "../../lib/apiHandler";
 import {assertDefined, assertExist, assertNotEmpty} from "../../lib/assert-lib";
 import * as CloudSave from "../../lib/cloudSave-lib";
@@ -12,8 +12,8 @@ const handlers: Record<string, EventHandler> = Object.freeze({
     requestDownloadCloudSave,
 });
 
-export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> {
-    return new ApiHandler(handlers).handle(event);
+export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event, context) => {
+    return ApiHandler.handle(event, context, handlers);
 }
 
 interface GetAllCloudSavesData extends EventData {
