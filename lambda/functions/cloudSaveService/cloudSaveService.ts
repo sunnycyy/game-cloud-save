@@ -56,7 +56,6 @@ async function requestUploadCloudSave(data: RequestUploadCloudSaveData, claims: 
         saveFiles,
         createdAt,
         cloudStoragePath: `cloudSaves/${userId}/${gameId}/${createdAt}.zip`,
-        uploaded: false,
         expireAt: Date.now() + Hour,
     };
     await CloudSave.putCloudSave(userId, gameId, cloudSave);
@@ -83,11 +82,11 @@ async function completeUploadCloudSave(data: CompleteUploadCloudSave, claims: Ev
 
     const cloudSave = await CloudSave.getCloudSave(userId, gameId, createdAt);
     assertExist({cloudSave});
+    assertCondition(!!cloudSave.expireAt, "Upload cloud save already completed");
 
     const fileUploaded = await CloudSave.isCloudSaveFileUploaded(cloudSave.cloudStoragePath);
     assertCondition(fileUploaded, "Cloud save file not uploaded", {cloudStoragePath: cloudSave.cloudStoragePath});
 
-    cloudSave.uploaded = true;
     delete cloudSave.expireAt;
 
     await CloudSave.putCloudSave(userId, gameId, cloudSave);

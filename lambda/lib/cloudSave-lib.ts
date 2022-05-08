@@ -37,7 +37,6 @@ export interface CloudSaveRecord extends DynamoDBItem {
     version: string,
     saveFiles: CloudSaveFile[],
     cloudStoragePath: string,
-    uploaded: boolean,
 }
 
 export interface CloudSaveFile {
