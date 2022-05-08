@@ -3,27 +3,13 @@ import {CompareOp} from "./compareOp";
 import {Expression, ExpressionAttributes, ExpressionBetweenValues, ExpressionMap} from "./expression";
 import {labelExpressionKeys, labelExpressionMap} from "./expressionUtils";
 import {LogicalJoinOp} from "./logicalJoinOp";
-import {AndExpression, NotExpression, OrExpression} from "./logicalExpression";
 
 export type ConditionExpressionValue = string | number | boolean | ExpressionBetweenValues;
 
-export abstract class ConditionExpression implements Expression {
-    abstract toExpressionString(attributes: ExpressionAttributes): string;
-
-    and(condition: ConditionExpression): ConditionExpression {
-        return new AndExpression(this, condition);
-    }
-
-    or(condition: ConditionExpression): ConditionExpression {
-        return new OrExpression(this, condition);
-    }
-
-    not(): ConditionExpression {
-        return new NotExpression(this);
-    }
+export interface ConditionExpression extends Expression {
 }
 
-abstract class ConditionExpressionImpl<ValueType extends ConditionExpressionValue> extends ConditionExpression {
+abstract class ConditionExpressionImpl<ValueType extends ConditionExpressionValue> implements ConditionExpression {
     private readonly _map: ExpressionMap<ValueType>;
 
     protected get map() {
@@ -31,11 +17,10 @@ abstract class ConditionExpressionImpl<ValueType extends ConditionExpressionValu
     }
 
     protected constructor(map: ExpressionMap<ValueType>) {
-        super();
         this._map = map;
     }
 
-    override toExpressionString(attributes: ExpressionAttributes): string {
+    toExpressionString(attributes: ExpressionAttributes): string {
         const labels = labelExpressionMap(this._map, attributes);
         return labels
             .map(([keyLabel, valueLabel]) => this.createExpressionString(keyLabel as string, valueLabel as string | string[]))
