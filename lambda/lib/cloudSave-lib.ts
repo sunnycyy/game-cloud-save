@@ -3,6 +3,7 @@ import * as S3 from "../aws-lib/s3/s3-lib";
 import {Platform} from "./platform-lib";
 import {genKey} from "./utils";
 import {DynamoDBItem} from "../aws-lib/dynamodb/dynamodbItem";
+import {AttributeNotExistsExpression} from "../aws-lib/dynamodb/expressions/conditionExpression";
 
 enum SaveFileRoot {
     GameInstallPath,
@@ -53,7 +54,7 @@ function getId(userId: string, gameId: string): string {
 
 export async function getCloudSaves(userId: string, gameId: string): Promise<CloudSaveRecord[]> {
     const id = getId(userId, gameId);
-    const records = await DynamoDB.query(UserCloudSaveTable, {id});
+    const records = await DynamoDB.query(UserCloudSaveTable, {id}, null, new AttributeNotExistsExpression({expireAt: true}));
     return records as CloudSaveRecord[];
 }
 
