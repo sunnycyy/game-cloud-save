@@ -15,6 +15,9 @@ function markTimestamp(item: DynamoDBItem): void {
     if (item.expireAt) {
         item.expireAt_TTL = Math.ceil(item.expireAt / 1000);
     }
+    else {
+        delete item.expireAt_TTL;
+    }
 }
 
 export function createPutItemParams(tableName: string, item: DynamoDBItem, condition?: ConditionExpression): PutCommandInput {
