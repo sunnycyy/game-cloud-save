@@ -28,9 +28,10 @@ export class ApiHandler {
             const result = await handler(data, claims);
             return ApiHandler.createResponse(200, result);
         }
-        catch (err) {
-            console.error(`Error occurred in event: error="${err}", event=${JSON.stringify(event)}`);
-            return ApiHandler.createResponse(500, err);
+        catch (error) {
+            console.error(typeof error === "object" ? JSON.stringify(error) : error);
+            console.error(`Error occurred in event: ${JSON.stringify(event)}`);
+            return ApiHandler.createResponse(500, error);
         }
     }
 
