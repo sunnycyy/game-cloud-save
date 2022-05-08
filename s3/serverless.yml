@@ -21,3 +21,8 @@ resources:
       DeletionPolicy: Retain
       Properties:
         BucketName: ${file(../config.yml):projectName}-${self:provider.stage}-storagebucket
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
