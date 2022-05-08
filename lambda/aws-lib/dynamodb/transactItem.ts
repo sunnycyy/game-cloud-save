@@ -1,13 +1,9 @@
-import {DynamoDBItem, DynamoDBKey} from "./dynamodb";
 import {ConditionExpression} from "./expressions/conditionExpression";
-import {
-    SetAttributeExpression,
-    SetAttributeIfNotExistExpression,
-    UpdateExpression
-} from "./expressions/updateExpression";
+import {UpdateExpression} from "./expressions/updateExpression";
 import {ExpressionAttributes} from "./expressions/expression";
-import {DeleteCommandInput, PutCommandInput, UpdateCommandInput} from "@aws-sdk/lib-dynamodb";
-import {toDeleteItemParams, toPutItemParams, toUpdateItemParams} from "./dynamodbUtils";
+import {PutCommandInput, UpdateCommandInput} from "@aws-sdk/lib-dynamodb";
+import {createDeleteItemParams, createPutItemParams, createUpdateItemParams} from "./dynamodbUtils";
+import {DynamoDBItem, DynamoDBKey} from "./dynamodbItem";
 
 interface TransactParams {
     TableName: string,
@@ -65,7 +61,7 @@ export class TransactPutItem extends TransactItem {
     }
 
     override toTransactParams(): {Put: TransactPutParams} {
-        return {Put: toPutItemParams(this.tableName, this.item, this.condition)};
+        return {Put: createPutItemParams(this.tableName, this.item, this.condition)};
     }
 }
 
@@ -118,7 +114,7 @@ export class TransactDeleteItem extends TransactConditionKeyItem {
     }
 
     override toTransactParams(): {Delete: TransactDeleteParams} {
-        return {Delete: toDeleteItemParams(this.tableName, this.key, this.condition)};
+        return {Delete: createDeleteItemParams(this.tableName, this.key, this.condition)};
     }
 }
 
@@ -133,7 +129,7 @@ export class TransactUpdateItem extends TransactConditionKeyItem {
     }
 
     override toTransactParams(): {Update: TransactUpdateParams} {
-        const params = toUpdateItemParams(this.tableName, this.key, this._updates, this.condition);
+        const params = createUpdateItemParams(this.tableName, this.key, this._updates, this.condition);
         delete params.ReturnValues;
         return {Update: params as TransactUpdateParams};
     }

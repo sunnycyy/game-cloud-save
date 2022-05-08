@@ -1,4 +1,4 @@
-import {DynamoDBItem, DynamoDBKey} from "./dynamodb";
+import {DynamoDBItem, DynamoDBKey} from "./dynamodbItem";
 
 abstract class BatchItem {
     private readonly _tableName: string;

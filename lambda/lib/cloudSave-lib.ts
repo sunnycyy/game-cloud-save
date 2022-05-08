@@ -1,8 +1,8 @@
-import * as DynamoDB from "../aws/dynamodb/dynamodb";
-import {DynamoDBItem} from "../aws/dynamodb/dynamodb";
-import * as S3 from "../aws/s3/s3";
+import * as DynamoDB from "../aws-lib/dynamodb/dynamodb-lib";
+import * as S3 from "../aws-lib/s3/s3-lib";
 import {Platform} from "./platform-lib";
 import {genKey} from "./utils";
+import {DynamoDBItem} from "../aws-lib/dynamodb/dynamodbItem";
 
 enum SaveFileRoot {
     GameInstallPath,

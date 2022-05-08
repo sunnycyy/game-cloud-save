@@ -1,10 +1,10 @@
 import {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
-import * as Cognito from "../../aws/cognito/cognito";
-import {AuthResult} from "../../aws/cognito/cognito";
-import {ApiHandler, EventData} from "../../lib/apiHandler";
+import * as Cognito from "../../aws-lib/cognito/cognito-lib";
+import {AuthResult} from "../../aws-lib/cognito/cognito-lib";
+import {ApiHandler, EventData, EventHandler} from "../../lib/apiHandler";
 import {assertDefined} from "../../lib/assert-lib";
 
-const handlers = Object.freeze({
+const handlers: Record<string, EventHandler> = Object.freeze({
     userAuth,
 });
 

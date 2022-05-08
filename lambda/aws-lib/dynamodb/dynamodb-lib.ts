@@ -1,6 +1,9 @@
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {
-    BatchGetCommand, BatchGetCommandInput, BatchWriteCommand, BatchWriteCommandInput,
+    BatchGetCommand,
+    BatchGetCommandInput,
+    BatchWriteCommand,
+    BatchWriteCommandInput,
     DeleteCommand,
     DynamoDBDocumentClient,
     GetCommand,
@@ -11,7 +14,9 @@ import {
     QueryCommandOutput,
     ScanCommand,
     ScanCommandInput,
-    ScanCommandOutput, TransactWriteCommand, TransactWriteCommandInput,
+    ScanCommandOutput,
+    TransactWriteCommand,
+    TransactWriteCommandInput,
     UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import {ExpressionAttributes} from "./expressions/expression";
@@ -23,7 +28,8 @@ import {KeyCompareExpression, KeyConditionExpression} from "./expressions/keyCon
 import {AndExpression} from "./expressions/logicalExpression";
 import {BatchGetItem, BatchWriteItem} from "./batchItem";
 import {TransactConditionCheck, TransactDeleteItem, TransactPutItem, TransactUpdateItem} from "./transactItem";
-import {toDeleteItemParams, toPutItemParams, toUpdateItemParams} from "./dynamodbUtils";
+import {createDeleteItemParams, createPutItemParams, createUpdateItemParams} from "./dynamodbUtils";
+import {DynamoDBItem, DynamoDBKey} from "./dynamodbItem";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client, {
@@ -36,15 +42,6 @@ const docClient = DynamoDBDocumentClient.from(client, {
         wrapNumbers: false,
     },
 });
-
-export interface DynamoDBItem extends DynamoDBKey {
-    createdAt?: number,
-    updatedAt?: number,
-    expireAt?: number,
-    expireAt_TTL?: number,
-}
-
-export type DynamoDBKey = Record<string, NonNullable<any>>;
 
 export async function getItem(tableName: string, key: DynamoDBKey, projection?: ProjectionExpression): Promise<DynamoDBItem> {
     const params: GetCommandInput = {
@@ -62,7 +59,7 @@ export async function getItem(tableName: string, key: DynamoDBKey, projection?: 
 }
 
 export async function putItem(tableName: string, item: DynamoDBItem, condition?: ConditionExpression): Promise<void> {
-    await docClient.send(new PutCommand(toPutItemParams(tableName, item, condition)));
+    await docClient.send(new PutCommand(createPutItemParams(tableName, item, condition)));
 }
 
 export async function updateItem(
@@ -71,14 +68,14 @@ export async function updateItem(
     updates: UpdateExpression | UpdateExpression[],
     condition?: ConditionExpression
 ): Promise<DynamoDBItem> {
-    const params = toUpdateItemParams(tableName, key, updates, condition);
+    const params = createUpdateItemParams(tableName, key, updates, condition);
     params.ReturnValues = "ALL_NEW";
     const response = await docClient.send(new UpdateCommand(params));
     return response.Attributes as DynamoDBItem;
 }
 
 export async function deleteItem(tableName: string, key: DynamoDBKey, condition?: ConditionExpression): Promise<void> {
-    await docClient.send(new DeleteCommand(toDeleteItemParams(tableName, key, condition)));
+    await docClient.send(new DeleteCommand(createDeleteItemParams(tableName, key, condition)));
 }
 
 export async function scan(

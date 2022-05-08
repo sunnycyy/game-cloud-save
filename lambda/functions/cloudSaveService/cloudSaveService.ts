@@ -1,11 +1,11 @@
 import {APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2} from "aws-lambda";
-import {ApiHandler, EventClaims, EventData} from "../../lib/apiHandler";
+import {ApiHandler, EventClaims, EventData, EventHandler} from "../../lib/apiHandler";
 import {assertDefined, assertExist, assertNotEmpty} from "../../lib/assert-lib";
 import * as CloudSave from "../../lib/cloudSave-lib";
 import {CloudSaveFile, CloudSaveRecord} from "../../lib/cloudSave-lib";
 import {Platform} from "../../lib/platform-lib";
 
-const handlers = Object.freeze({
+const handlers: Record<string, EventHandler> = Object.freeze({
     getAllCloudSaves,
     requestUploadCloudSave,
     completeUploadCloudSave,

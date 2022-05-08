@@ -1,5 +1,5 @@
-import * as DynamoDB from "../aws/dynamodb/dynamodb";
-import {DynamoDBItem} from "../aws/dynamodb/dynamodb";
+import * as DynamoDB from "../aws-lib/dynamodb/dynamodb-lib";
+import {DynamoDBItem} from "../aws-lib/dynamodb/dynamodbItem";
 
 export interface GameRecord extends DynamoDBItem {
     userId?: string,
