@@ -70,12 +70,12 @@ function verifyCloudSaveFiles(platform: Platform, saveFiles: CloudSaveFile[]): v
     }
 }
 
-interface CompleteUploadCloudSave extends EventData {
+interface CompleteUploadCloudSaveData extends EventData {
     gameId: string,
     createdAt: number,
 }
 
-async function completeUploadCloudSave(data: CompleteUploadCloudSave, claims: EventClaims): Promise<CloudSaveRecord> {
+async function completeUploadCloudSave(data: CompleteUploadCloudSaveData, claims: EventClaims): Promise<CloudSaveRecord> {
     const {userId} = claims;
     const {gameId, createdAt} = data;
     assertDefined({gameId, createdAt});
