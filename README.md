@@ -76,9 +76,12 @@ The following is the response body:
 ```json
 {
   "accessToken": "<Java Web Token (JWT)>",
-  "expireAt": <Unix timestamp>
+  "expireAt": 1234567890123
 }
 ```
+
+`expireAt` is access token expiry time in Unix timestamp.
+
 ### Game Management
 #### Get All Games
 Send a **POST** request to `/gameService/getAllGames` to retrieve all added games.  
@@ -132,33 +135,33 @@ A list of cloud save records will be returned.
 ```json
 {
   "gameId": "<Game ID>",
-  "platform": <Platform index>,
+  "platform": 0,
   "version": "<Game version>",
   "saveFiles": [
     {
-      "root": <Save file root index>,
+      "root": 0,
       "filePath": "<Path to save file from save file root>"
     }
   ]
 }
 ```
 
-The followings are the available platform indices:
+The followings are the available `platform` values:
 
-| Platform |  Index  |
-|----------|:-------:|
-| Windows  |    0    |
-| Mac      |    1    |
+| Platform | Value |
+|----------|:-----:|
+| Windows  |   0   |
+| Mac      |   1   |
 
-The following are the available save file root indices:
+The following are the available `root` values:
 
-| Save File Root                      |  Index  |
-|-------------------------------------|:-------:|
-| Game Install Path                   |    0    |
-| User Documents                      |    1    |
-| App Data Local (_Windows only_)     |    2    |
-| App Data Local Low (_Windows only_) |    3    |
-| App Data Roaming (_Windows only_)   |    4    |
+| Save File Root                      | Value |
+|-------------------------------------|:-----:|
+| Game Install Path                   |   0   |
+| User Documents                      |   1   |
+| App Data Local (_Windows only_)     |   2   |
+| App Data Local Low (_Windows only_) |   3   |
+| App Data Roaming (_Windows only_)   |   4   |
 
 A new cloud save record and upload URL will be returned with the following body format:
 
@@ -166,20 +169,22 @@ A new cloud save record and upload URL will be returned with the following body 
 {
   "cloudSave": {
     "gameId": "<Game ID>",
-    "platform": <Platform index>,
+    "platform": 0,
     "version": "<Game version>",
     "saveFile": [
       {
-        "root": <Save file root index>,
+        "root": 0,
         "filePath": "<Path to save file from save file root>"
       }
     ],
     "cloudStoragePath": "<Path to uploaded zip file in S3>",
-    "createdAt": <Unix timestamp>
+    "createdAt": 1234567890123
   },
   "uploadUrl": "<Upload URL>"
 }
 ```
+
+`createdAt` is cloud save record creation time in Unix timestamp.
 
 2. Send a **PUT** request to the upload URL retrieved in previous step with the zip file containing all game save related files as payload to upload cloud save.  
 The upload URL will be available for 1 minute by default.
@@ -190,9 +195,11 @@ The upload URL will be available for 1 minute by default.
 ```json
 {
   "gameId": "<Game ID>",
-  "createdAt": <Unix timestamp of cloud save record creation>
+  "createdAt": 1234567890123
 }
 ```
+
+`createdAt` is cloud save record creation time in Unix timestamp.
 
 The updated cloud save record will be returned.
 
@@ -202,9 +209,11 @@ The updated cloud save record will be returned.
 ```json
 {
   "gameId": "<Game ID>",
-  "createdAt": <Unix timestamp of cloud save record creation>
+  "createdAt": 1234567890123
 }
 ```
+
+`createdAt` is cloud save record creation time in Unix timestamp.
 
 A download URL will be returned.
 
