@@ -41,7 +41,8 @@ npm install
 ### Steps
 Run the following commands to deploy all resources to AWS from project root.  
 All resources will be deployed to `us-east-1` and `dev` stage by default.
-Please change the `region` in [config.yml](config.yml), and add `--stage <stageName>` after `serverless deploy` if necessary.
+If you wish to deploy to different region, please change `region` to target region in [config.yml](config.yml).
+If you wish to deploy to different stage, please add the target stage to [stages.yml](stages.yml), and add `--stage <Target stage>` option after `serverless deploy`.
 
 ```shell
 cd s3
