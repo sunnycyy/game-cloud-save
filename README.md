@@ -81,7 +81,7 @@ The following is the response body:
 }
 ```
 
-`expireAt` is access token expiry time in Unix timestamp.
+*`expireAt` is access token expiry time in Unix timestamp.
 
 ### Game Management
 #### Get All Games
@@ -185,7 +185,7 @@ A new cloud save record and upload URL will be returned with the following body 
 }
 ```
 
-`createdAt` is cloud save record creation time in Unix timestamp.
+*`createdAt` is cloud save record creation time in Unix timestamp.
 
 2. Send a **PUT** request to the upload URL retrieved in previous step with the zip file containing all game save related files as payload to upload cloud save.  
 The upload URL will be available for 1 minute by default.
@@ -200,7 +200,7 @@ The upload URL will be available for 1 minute by default.
 }
 ```
 
-`createdAt` is cloud save record creation time in Unix timestamp.
+*`createdAt` is cloud save record creation time in Unix timestamp.
 
 The updated cloud save record will be returned.
 
@@ -214,7 +214,7 @@ The updated cloud save record will be returned.
 }
 ```
 
-`createdAt` is cloud save record creation time in Unix timestamp.
+*`createdAt` is cloud save record creation time in Unix timestamp.
 
 A download URL will be returned.
 
