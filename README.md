@@ -62,12 +62,39 @@ serverless deploy --verbose
 ```
 
 ## Usage
-### User Authentication
-You must send a **POST** request to `/authService/userAuth` with the following payload to login and retrieve access token for the `Authorization` header of all other requests:
+### User Management
+#### User Registration
+1. Send a **POST** request to `/authService/registerUser` with the following payload to register new user:
 
 ```json
 {
-  "username": "<Username>",
+  "username": "<Email address>",
+  "password": "<Password>"
+}
+```
+
+`password` must be at least 8 characters in length, and include at least an upper-case character, a lower-case character and a number by default.
+Please update the password requirement in `PasswordPolicy` in [cognito/serverless.yml](cognito/serverless.yml) if necessary.
+
+A response with status **200** and empty body will be received if user registration is successful, and a verification email with a confirmation code will be sent to the registered email address.
+
+2. Send a **POST** request to `/authService/confirmUserRegistration` with the following payload to confirm the user registration by using the confirmation code received in previous step:
+
+```json
+{
+  "username": "<Email address>",
+  "confirmationCode": "<Confirmation code>"
+}
+```
+
+A response with status **200** will be received if user registration is successfully confirmed.
+
+#### User Authentication
+Send a **POST** request to `/authService/userAuth` with the following payload to login and retrieve access token for the `Authorization` header of all other requests:
+
+```json
+{
+  "username": "<Email address>",
   "password": "<Password>"
 }
 ```
