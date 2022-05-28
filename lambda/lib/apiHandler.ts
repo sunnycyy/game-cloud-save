@@ -42,10 +42,11 @@ function toEventClaims(jwtAuthorizerClaims: Record<string, any>): EventClaims {
 }
 
 function createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
-    return {
-        statusCode,
-        body: (typeof body === "object") ? JSON.stringify(body) : body.toString(),
-    };
+    const response: APIGatewayProxyResultV2 = {statusCode};
+    if (body !== undefined) {
+        response.body = (typeof body === "object") ? JSON.stringify(body) : body.toString();
+    }
+    return response;
 }
 
 export function success(body): APIGatewayProxyResultV2 {
