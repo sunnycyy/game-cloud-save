@@ -1,8 +1,8 @@
 import {
     AuthFlowType,
-    CognitoIdentityProviderClient,
+    CognitoIdentityProviderClient, ConfirmSignUpCommand, ConfirmSignUpCommandInput,
     InitiateAuthCommand,
-    InitiateAuthCommandInput
+    InitiateAuthCommandInput, SignUpCommand, SignUpCommandInput
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const client = new CognitoIdentityProviderClient({});
@@ -10,6 +10,24 @@ const client = new CognitoIdentityProviderClient({});
 export interface AuthResult {
     accessToken: string,
     expireAt: number,
+}
+
+export async function registerUser(clientId: string, username: string, password: string): Promise<void> {
+    const params: SignUpCommandInput = {
+        ClientId: clientId,
+        Username: username,
+        Password: password,
+    };
+    await client.send(new SignUpCommand(params));
+}
+
+export async function confirmUserRegistration(clientId: string, username: string, confirmationCode: string): Promise<void> {
+    const params: ConfirmSignUpCommandInput = {
+        ClientId: clientId,
+        Username: username,
+        ConfirmationCode: confirmationCode,
+    };
+    await client.send(new ConfirmSignUpCommand(params));
 }
 
 export async function usernamePasswordAuth(clientId: string, username: string, password: string): Promise<AuthResult> {

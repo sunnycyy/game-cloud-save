@@ -60,6 +60,12 @@ functions:
               - !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolId
     events:
       - httpApi:
+          path: /authService/registerUser
+          method: POST
+      - httpApi:
+          path: /authService/confirmUserRegistration
+          method: POST
+      - httpApi:
           path: /authService/userAuth
           method: POST
   gameService:
