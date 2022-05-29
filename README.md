@@ -46,19 +46,19 @@ If you wish to deploy to different stage, please add the target stage to [stages
 
 ```shell
 cd s3
-serverless deploy --verbose
+serverless deploy
 
 cd ../dynamodb
-serverless deploy --verbose
+serverless deploy
 
 cd ../cognito
-serverless deploy --verbose
+serverless deploy
 
 cd ../apigateway
-serverless deploy --verbose
+serverless deploy
 
 cd ../lambda
-serverless deploy --verbose
+serverless deploy
 ```
 
 ## Usage
