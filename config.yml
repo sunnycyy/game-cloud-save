@@ -3,7 +3,7 @@ platform: aws
 defaultStage: dev
 region: us-east-1
 profile: gameCloudSave
-runtime: nodejs14.x
+runtime: nodejs16.x
 logRetentionInDays: 7
 versionFunctions: false
 stages:
