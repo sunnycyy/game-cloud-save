@@ -6,3 +6,5 @@ profile: gameCloudSave
 runtime: nodejs14.x
 logRetentionInDays: 7
 versionFunctions: false
+stages:
+  - dev

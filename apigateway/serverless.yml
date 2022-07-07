@@ -9,7 +9,7 @@ plugins:
   - serverless-webpack
 
 custom:
-  stages: ${file(../stages.yml):stages}
+  stages: ${file(../config.yml):stages}
   webpack:
     webpackConfig: ../webpack.config.js
     includeModules: true

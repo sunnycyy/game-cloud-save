@@ -6,7 +6,7 @@ plugins:
   - serverless-stage-manager
 
 custom:
-  stages: ${file(../stages.yml):stages}
+  stages: ${file(../config.yml):stages}
 
 provider:
   name: ${file(../config.yml):platform}
