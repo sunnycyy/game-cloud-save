@@ -15,10 +15,10 @@ The followings are the AWS services used for this project:
 ### Prerequisite
 1. Install the followings:
 
-| Software / Framework                                            |  Version  |
-|-----------------------------------------------------------------|:---------:|
-| [Node.js](https://nodejs.org/)                                  |   14.x    |
-| [AWS Command Line Interface (CLI)](https://aws.amazon.com/cli/) |    2.x    |
+| Software / Framework                                            | Version |
+|-----------------------------------------------------------------|:-------:|
+| [Node.js](https://nodejs.org/)                                  |  16.x   |
+| [AWS Command Line Interface (CLI)](https://aws.amazon.com/cli/) |   2.x   |
 
 2. Setup an AWS profile for deployment through AWS CLI.
 
