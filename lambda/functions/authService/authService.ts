@@ -7,6 +7,8 @@ import {assertDefined} from "../../lib/assert-lib";
 const handlers: Record<string, EventHandler> = Object.freeze({
     registerUser,
     confirmUserRegistration,
+    resetPassword,
+    confirmPasswordReset,
     userAuth,
 });
 
@@ -36,6 +38,30 @@ async function confirmUserRegistration(data: ConfirmUserRegistrationData): Promi
     assertDefined({username, confirmationCode});
 
     await Cognito.confirmUserRegistration(process.env.UserPoolClientId, username, confirmationCode);
+}
+
+interface ResetPasswordData extends EventData {
+    username: string,
+}
+
+async function resetPassword(data: ResetPasswordData): Promise<void> {
+    const {username} = data;
+    assertDefined({username});
+
+    return Cognito.resetPassword(process.env.UserPoolClientId, username);
+}
+
+interface ConfirmPasswordResetData extends EventData {
+    username: string,
+    password: string,
+    confirmationCode: string,
+}
+
+async function confirmPasswordReset(data: ConfirmPasswordResetData): Promise<void> {
+    const {username, password, confirmationCode} = data;
+    assertDefined({username, password, confirmationCode});
+
+    return Cognito.confirmPasswordReset(process.env.UserPoolClientId, username, password, confirmationCode);
 }
 
 interface UserAuthData extends EventData {

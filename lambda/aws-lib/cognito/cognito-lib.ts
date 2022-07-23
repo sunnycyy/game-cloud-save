@@ -1,8 +1,14 @@
 import {
     AuthFlowType,
-    CognitoIdentityProviderClient, ConfirmSignUpCommand, ConfirmSignUpCommandInput,
+    CognitoIdentityProviderClient, ConfirmForgotPasswordCommand, ConfirmForgotPasswordCommandInput,
+    ConfirmSignUpCommand,
+    ConfirmSignUpCommandInput,
+    ForgotPasswordCommand,
+    ForgotPasswordCommandInput,
     InitiateAuthCommand,
-    InitiateAuthCommandInput, SignUpCommand, SignUpCommandInput
+    InitiateAuthCommandInput,
+    SignUpCommand,
+    SignUpCommandInput
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const client = new CognitoIdentityProviderClient({});
@@ -44,4 +50,22 @@ export async function usernamePasswordAuth(clientId: string, username: string, p
         accessToken: response.AuthenticationResult.AccessToken,
         expireAt: Date.now() + (response.AuthenticationResult.ExpiresIn * 1000),
     };
+}
+
+export async function resetPassword(clientId: string, username: string): Promise<void> {
+    const params: ForgotPasswordCommandInput = {
+        ClientId: clientId,
+        Username: username,
+    };
+    await client.send(new ForgotPasswordCommand(params));
+}
+
+export async function confirmPasswordReset(clientId: string, username: string, password: string, confirmationCode: string): Promise<void> {
+    const params: ConfirmForgotPasswordCommandInput = {
+        ClientId: clientId,
+        Username: username,
+        Password: password,
+        ConfirmationCode: confirmationCode,
+    };
+    await client.send(new ConfirmForgotPasswordCommand(params));
 }

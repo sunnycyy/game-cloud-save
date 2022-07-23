@@ -53,6 +53,8 @@ functions:
         Action:
           - 'cognito-idp:SignUp'
           - 'cognito-idp:ConfirmSignUp'
+          - 'cognito-idp:ForgotPassword'
+          - 'cognito-idp:ConfirmForgotPassword'
           - 'cognito-idp:InitiateAuth'
         Resource:
           Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolArn
@@ -62,6 +64,12 @@ functions:
           method: POST
       - httpApi:
           path: /authService/confirmUserRegistration
+          method: POST
+      - httpApi:
+          path: /authService/resetPassword
+          method: POST
+      - httpApi:
+          path: /authService/confirmPasswordReset
           method: POST
       - httpApi:
           path: /authService/userAuth
