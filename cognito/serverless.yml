@@ -32,6 +32,10 @@ resources:
             RequireLowercase: true
             RequireNumbers: true
             RequireSymbols: false
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 2
     UserPoolClient:
       Type: AWS::Cognito::UserPoolClient
       Properties:
