@@ -48,7 +48,7 @@ async function resetPassword(data: ResetPasswordData): Promise<void> {
     const {username} = data;
     assertDefined({username});
 
-    return Cognito.resetPassword(process.env.UserPoolClientId, username);
+    await Cognito.resetPassword(process.env.UserPoolClientId, username);
 }
 
 interface ConfirmPasswordResetData extends EventData {
@@ -61,7 +61,7 @@ async function confirmPasswordReset(data: ConfirmPasswordResetData): Promise<voi
     const {username, password, confirmationCode} = data;
     assertDefined({username, password, confirmationCode});
 
-    return Cognito.confirmPasswordReset(process.env.UserPoolClientId, username, password, confirmationCode);
+    await Cognito.confirmPasswordReset(process.env.UserPoolClientId, username, password, confirmationCode);
 }
 
 interface UserAuthData extends EventData {
