@@ -1,5 +1,5 @@
 import {
-    AuthFlowType,
+    AuthFlowType, ChangePasswordCommand, ChangePasswordCommandInput,
     CognitoIdentityProviderClient, ConfirmForgotPasswordCommand, ConfirmForgotPasswordCommandInput,
     ConfirmSignUpCommand,
     ConfirmSignUpCommandInput,
@@ -68,4 +68,13 @@ export async function confirmPasswordReset(clientId: string, username: string, p
         ConfirmationCode: confirmationCode,
     };
     await client.send(new ConfirmForgotPasswordCommand(params));
+}
+
+export async function changePassword(accessToken: string, oldPassword: string, newPassword: string): Promise<void> {
+    const params: ChangePasswordCommandInput = {
+        AccessToken: accessToken,
+        PreviousPassword: oldPassword,
+        ProposedPassword: newPassword,
+    };
+    await client.send(new ChangePasswordCommand(params));
 }

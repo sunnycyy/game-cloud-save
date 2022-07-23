@@ -74,6 +74,19 @@ functions:
       - httpApi:
           path: /authService/userAuth
           method: POST
+  userService:
+    handler: functions/userService/userService.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - 'cognito-idp:ChangePassword'
+        Resource:
+          Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolArn
+    events:
+      - httpApi:
+          path: /userService/changePassword
+          method: POST
+          authorizer: ${self:custom.authorizers.userAuthorizer}
   gameService:
     handler: functions/gameService/gameService.handler
     iamRoleStatements:
