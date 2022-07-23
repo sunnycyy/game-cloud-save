@@ -53,3 +53,14 @@ resources:
         TimeToLiveSpecification:
           AttributeName: expireAt_TTL
           Enabled: true
+  Outputs:
+    UserGameTableArn:
+      Value:
+        Fn::GetAtt: UserGameTable.Arn
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserGameTableArn
+    UserCloudSaveTableArn:
+      Value:
+        Fn::GetAtt: UserCloudSaveTable.Arn
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserCloudSaveTableArn

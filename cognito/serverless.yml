@@ -66,11 +66,18 @@ resources:
           Ref: UserPool
         Domain: ${file(../config.yml):projectName}-${self:provider.stage}-userpooldomain
   Outputs:
-    UserPoolId:
-      Value: !Ref UserPool
+    UserPoolArn:
+      Value:
+        Fn::GetAtt: UserPool.Arn
       Export:
-        Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolId
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolArn
+    UserPoolProviderURL:
+      Value:
+        Fn::GetAtt: UserPool.ProviderURL
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolProviderURL
     UserPoolClientId:
-      Value: !Ref UserPoolClient
+      Value:
+        Ref: UserPoolClient
       Export:
         Name: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId

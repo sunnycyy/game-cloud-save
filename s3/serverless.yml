@@ -26,3 +26,9 @@ resources:
           BlockPublicPolicy: true
           IgnorePublicAcls: true
           RestrictPublicBuckets: true
+  Outputs:
+    StorageBucketArn:
+      Value:
+        Fn::GetAtt: StorageBucket.Arn
+      Export:
+        Name: ${file(../config.yml):projectName}-${self:provider.stage}-StorageBucketArn

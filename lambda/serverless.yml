@@ -16,7 +16,8 @@ custom:
   authorizers:
     userAuthorizer:
       type: jwt
-      id: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiAuthorizerUserAuthorizerId
+      id:
+        Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiAuthorizerUserAuthorizerId
 
 provider:
   name: ${file(../config.yml):platform}
@@ -37,10 +38,12 @@ provider:
     # S3 Bucket
     StorageBucket: ${file(../config.yml):projectName}-${self:provider.stage}-storagebucket
     # Cognito Client
-    UserPoolClientId: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId
+    UserPoolClientId:
+      Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId
 
   httpApi:
-    id: !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId
+    id:
+      Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId
 
 functions:
   authService:
@@ -48,16 +51,11 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action:
+          - 'cognito-idp:SignUp'
+          - 'cognito-idp:ConfirmSignUp'
           - 'cognito-idp:InitiateAuth'
         Resource:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:cognito-idp:'
-              - ${self:provider.region}
-              - ':'
-              - Ref: AWS::AccountId
-              - ':userpool/'
-              - !ImportValue ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolId
+          Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolArn
     events:
       - httpApi:
           path: /authService/registerUser
@@ -77,14 +75,7 @@ functions:
           - 'dynamodb:PutItem'
           - 'dynamodb:Query'
         Resource:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - ${self:provider.region}
-              - ':'
-              - Ref: AWS::AccountId
-              - ':table/'
-              - ${self:provider.environment.UserGameTable}
+          Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserGameTableArn
     events:
       - httpApi:
           path: /gameService/getAllGames
@@ -107,14 +98,7 @@ functions:
           - 'dynamodb:PutItem'
           - 'dynamodb:Query'
         Resource:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - ${self:provider.region}
-              - ':'
-              - Ref: AWS::AccountId
-              - ':table/'
-              - ${self:provider.environment.UserCloudSaveTable}
+          Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserCloudSaveTableArn
       - Effect: Allow
         Action:
           - 's3:GetObject'
@@ -123,8 +107,7 @@ functions:
         Resource:
           Fn::Join:
             - ''
-            - - 'arn:aws:s3:::'
-              - ${self:provider.environment.StorageBucket}
+            - - Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-StorageBucketArn
               - '/cloudSaves/*'
     events:
       - httpApi:

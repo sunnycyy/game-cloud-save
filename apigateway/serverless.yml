@@ -30,12 +30,7 @@ provider:
         type: jwt
         identitySource: $request.header.Authorization
         issuerUrl:
-          Fn::Join:
-            - ''
-            - - 'https://cognito-idp.'
-              - ${self:provider.region}
-              - '.amazonaws.com/'
-              - Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolId
+          Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolProviderURL
         audience:
           - Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId
 
@@ -57,10 +52,12 @@ resources:
         Name: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApi
   Outputs:
     HttpApiId:
-      Value: !Ref HttpApi
+      Value:
+        Ref: HttpApi
       Export:
         Name: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId
     HttpApiAuthorizerUserAuthorizerId:
-      Value: !Ref HttpApiAuthorizerUserAuthorizer
+      Value:
+        Ref: HttpApiAuthorizerUserAuthorizer
       Export:
         Name: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiAuthorizerUserAuthorizerId
