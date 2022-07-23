@@ -5,6 +5,7 @@ import {ServerException} from "./exception-lib";
 export type EventData = Record<string, any> | undefined;
 export interface EventClaims {
     userId: string,
+    accessToken: string,
 }
 export type EventHandler = (data: EventData, claims: EventClaims) => Promise<any>;
 
@@ -17,15 +18,14 @@ class EventHandlerNotFoundException extends ServerException {
 export const ApiHandler = Object.freeze({
     handle: async (event: APIGatewayProxyEventV2 | APIGatewayProxyEventV2WithJWTAuthorizer, context: Context, handlers: Record<string, EventHandler>) => {
         try {
-            const path = event.rawPath.substring(event.rawPath.lastIndexOf("/") + 1);
+            const path = getEventPath(event);
             const handler = handlers[path];
             if (!handler) {
                 throw new EventHandlerNotFoundException(event.rawPath);
             }
 
-            const data: EventData = event.body ? JSON.parse(event.body) : undefined;
-            const jwtEvent = event as APIGatewayProxyEventV2WithJWTAuthorizer;
-            const claims: EventClaims = jwtEvent.requestContext.authorizer ? toEventClaims(jwtEvent.requestContext.authorizer.jwt.claims) : undefined;
+            const data = getEventData(event);
+            const claims = getEventClaims(event as APIGatewayProxyEventV2WithJWTAuthorizer);
             const result = await handler(data, claims);
             return success(result);
         }
@@ -37,8 +37,23 @@ export const ApiHandler = Object.freeze({
     }
 });
 
-function toEventClaims(jwtAuthorizerClaims: Record<string, any>): EventClaims {
-    return {userId: jwtAuthorizerClaims.sub};
+function getEventPath(event: APIGatewayProxyEventV2 | APIGatewayProxyEventV2WithJWTAuthorizer): string {
+    return event.rawPath.substring(event.rawPath.lastIndexOf("/") + 1);
+}
+
+function getEventData(event: APIGatewayProxyEventV2 | APIGatewayProxyEventV2WithJWTAuthorizer): EventData {
+    if (event.body) {
+        return JSON.parse(event.body);
+    }
+}
+
+function getEventClaims(event: APIGatewayProxyEventV2WithJWTAuthorizer): EventClaims {
+    if (event.requestContext.authorizer) {
+        return {
+            userId: event.requestContext.authorizer.jwt.claims.sub as string,
+            accessToken: event.headers.authorization,
+        };
+    }
 }
 
 function createResponse(statusCode: number, body: any): APIGatewayProxyResultV2 {
