@@ -74,14 +74,18 @@ export function isRootTypeAvailableOnPlatform(root: SaveFileRoot, platform: Plat
     return PlatformAvailableRootType[platform].includes(root);
 }
 
+const uploadCloudSaveFileUrlExpireInSecond = 60;
+
 export async function getUploadCloudSaveFileUrl(path: string): Promise<string> {
-    return S3.getUploadFilePresignedUrl(StorageBucket, path, 60);
+    return S3.getUploadFilePresignedUrl(StorageBucket, path, uploadCloudSaveFileUrlExpireInSecond);
 }
 
 export async function isCloudSaveFileUploaded(path: string): Promise<boolean> {
     return S3.isFileExists(StorageBucket, path);
 }
 
+const downloadCloudSaveFileUrlExpireInSecond = 300;
+
 export async function getDownloadCloudSaveFileUrl(path: string): Promise<string> {
-    return S3.getDownloadFilePresignedUrl(StorageBucket, path, 300);
+    return S3.getDownloadFilePresignedUrl(StorageBucket, path, downloadCloudSaveFileUrlExpireInSecond);
 }
