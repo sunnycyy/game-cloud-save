@@ -62,7 +62,7 @@ serverless deploy
 ```
 
 ## Usage
-- [Authentication Management](#authentication-management)
+- [Authentication](#authentication)
   - [User Registration](#user-registration)
   - [User Authentication](#user-authentication)
   - [Reset Password](#reset-password)
@@ -77,7 +77,7 @@ serverless deploy
   - [Upload Cloud Save](#upload-cloud-save)
   - [Download Cloud Save](#download-cloud-save)
 
-### Authentication Management
+### Authentication
 #### User Registration
 ##### Step 1
 Send a **POST** request to `/authService/registerUser` with the following payload in JSON to register new user:
@@ -222,12 +222,12 @@ An array of [cloud save records](#cloud-save-record-format) will be returned.
 
 ###### Save File Record Format
 
-| Field Name | Type   | Description                                   |
-|------------|--------|-----------------------------------------------|
-| `root`     | number | [Save file root index](#save-file-root-index) |
-| `filePath` | string | Save file path from root                      |
+| Field Name | Type   | Description                                          |
+|------------|--------|------------------------------------------------------|
+| `root`     | number | [Save file root index](#save-file-root-index-values) |
+| `filePath` | string | Save file path from root                             |
 
-###### Save File Root Index
+###### Save File Root Index Values
 
 | Value | Save File Root                     | Support Platforms |
 |:-----:|------------------------------------|-------------------|
