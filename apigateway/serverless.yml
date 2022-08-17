@@ -34,6 +34,9 @@ provider:
         audience:
           - Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-UserPoolClientId
 
+package:
+  individually: true
+
 functions:
   dummy:
     handler: functions/dummy.handler

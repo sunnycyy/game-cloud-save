@@ -45,6 +45,9 @@ provider:
     id:
       Fn::ImportValue: ${file(../config.yml):projectName}-${self:provider.stage}-HttpApiId
 
+package:
+  individually: true
+
 functions:
   authService:
     handler: functions/authService/authService.handler
