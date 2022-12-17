@@ -12,7 +12,7 @@
     "@typescript-eslint/parser": "^5.46.1",
     "babel-loader": "^8.3.0",
     "babel-plugin-source-map-support": "^2.2.0",
-    "eslint": "^8.29.0",
+    "eslint": "^8.30.0",
     "serverless": "^3.25.1",
     "serverless-iam-roles-per-function": "^3.2.0",
     "serverless-plugin-split-stacks": "^1.12.0",
