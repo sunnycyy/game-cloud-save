@@ -12,7 +12,13 @@ custom:
   stages: ${file(../config.yml):stages}
   webpack:
     webpackConfig: ../webpack.config.js
-    includeModules: true
+    includeModules:
+      forceExclude:
+        - '@aws-sdk/client-cognito-identity-provider'
+        - '@aws-sdk/client-dynamodb'
+        - '@aws-sdk/client-s3'
+        - '@aws-sdk/lib-dynamodb'
+        - '@aws-sdk/s3-request-presigner'
   authorizers:
     userAuthorizer:
       type: jwt
