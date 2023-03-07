@@ -2,7 +2,7 @@
   "name": "game-cloud-save-apigateway",
   "version": "1.0.0",
   "dependencies": {
-    "@babel/runtime": "^7.20.6",
+    "@babel/runtime": "^7.21.0",
     "source-map-support": "^0.5.21"
   }
 }
