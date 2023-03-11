@@ -3,9 +3,11 @@ service: ${file(../config.yml):projectName}-cognito
 frameworkVersion: '3'
 
 plugins:
+  - serverless-local-nodejs-manager
   - serverless-stage-manager
 
 custom:
+  localNodejsVersion: ${file(../config.yml):localNodejsVersion}
   stages: ${file(../config.yml):stages}
 
 provider:

@@ -3,12 +3,14 @@ service: ${file(../config.yml):projectName}-apigateway
 frameworkVersion: '3'
 
 plugins:
+  - serverless-local-nodejs-manager
   - serverless-stage-manager
   - serverless-iam-roles-per-function
   - serverless-plugin-split-stacks
   - serverless-webpack
 
 custom:
+  localNodejsVersion: ${file(../config.yml):localNodejsVersion}
   stages: ${file(../config.yml):stages}
   webpack:
     webpackConfig: ../webpack.config.js
